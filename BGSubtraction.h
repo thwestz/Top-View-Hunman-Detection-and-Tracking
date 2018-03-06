@@ -10,6 +10,6 @@ public:
 
 
 	void BackgroundSubtraction(String videoPath,String svmPath);
-	void BackgroundSubtraction_old();
+	void BackgroundSubtraction_old(String videoPath, String svmPath);
 	Mat templeteMatching(vector<Mat> obj , Mat templ);
 };

@@ -96,6 +96,7 @@ void HOG_SVM::sample_neg( const vector< Mat > & full_neg_lst, vector< Mat > & ne
 void HOG_SVM::computeHOGs( const Size wsize, const vector< Mat > & img_lst, vector< Mat > & gradient_lst, bool use_flip )
 {
     HOGDescriptor hog;
+
     hog.winSize = wsize;
     Mat gray;
     vector< float > descriptors;
@@ -121,79 +122,64 @@ void HOG_SVM::computeHOGs( const Size wsize, const vector< Mat > & img_lst, vect
     }
 }
 
-void HOG_SVM::test_trained_detector( String obj_det_filename, Mat ROI )
+vector<Rect> HOG_SVM::test_trained_detector( String obj_det_filename, Mat ROI )
 {
     HOGDescriptor hog;
-    hog.load( obj_det_filename );
+	vector<Rect> predicted;
 
-    vector< String > files;
-    //glob( test_dir, files );
+    hog.load( obj_det_filename );
 
     int delay = 0;
 	int k = 0;
-   // VideoCapture cap;
 
-   /* if ( videofilename != "" )
-    {
-        if ( videofilename.size() == 1 && isdigit( videofilename[0] ) )
-            cap.open( videofilename[0] - '0' );
-        else
-            cap.open( videofilename );
-    }*/
+        Mat img,img_o;
 
-        Mat img,img_o,temp;
-
-       /* if ( cap.isOpened() )
-        {
-            cap >> img;
-            delay = 1;
-        }
-        else if( k < files.size() )
-        {
-            img = imread( files[k] );
-	
-        }*/
-		img = ROI;
-        if ( img.empty() )
-        {
-            return;
-        }
-		//resize(img, img,Size(img.cols*0.5,img.rows*0.5));
-		temp = ROI.clone();
-		//undistort(temp, img, camera_matrix, distCoeffs);
-
-	
-	
-        vector< Rect > detections;
-        vector< double > foundWeights;
-
-        hog.detectMultiScale( ROI, detections, foundWeights );
-
-
-
-
-		for ( size_t j = 0; j < detections.size(); j++ )
-        {
-			if (foundWeights[j] > 0.3) {
-			
-				Scalar color = Scalar(0, foundWeights[j] * foundWeights[j] * 200, 0);
-				rectangle(img, detections[j], color, img.cols / 400 + 1);
-
+			img = ROI;
+			if (img.empty())
+			{
+				return predicted;
 			}
-				if (false) {
-					Mat gray;
-					Mat crop = temp(detections[j]);
-					resize(crop, crop, Size(64, 64));
-					cvtColor(crop, gray, CV_BGR2GRAY);
-					imwrite("C:/Users/Win10/Desktop/Project_Oriental/Dataset_Video/oriental/hard_neg/images" + to_string(k) + ".jpg", gray);
-					k++;
-				}
-        
+			//resize(img, img,Size(img.cols*0.5,img.rows*0.5));
 
-    }
 
-		imshow("Predict HOG_SVM Detector", img);
-		waitKey(0);
+			vector< Rect > detections;
+			vector< double > foundWeights;
+
+			vector<Rect> found, found_filtered;
+			Mat cleanImg = img.clone();
+			double t = (double)getTickCount();
+
+			hog.detectMultiScale(img, found, 0, Size(8, 8), Size(0, 0), 1.05);
+			for (size_t i = 0; i < found.size(); i++)
+			{
+				Rect r = found[i];
+
+				size_t j;
+				// Do not add small detections inside a bigger detection.
+				for (j = 0; j < found.size(); j++)
+					if (j != i && (r & found[j]) == r)
+						break;
+
+				if (j == found.size())
+					found_filtered.push_back(r);
+			}
+
+			for (size_t i = 0; i < found_filtered.size(); i++)
+			{
+				Rect r = found_filtered[i];
+
+				r.x += cvRound(r.width*0.1);
+				r.width = cvRound(r.width*0.8);
+				r.y += cvRound(r.height*0.07);
+				r.height = cvRound(r.height*0.8);
+				rectangle(img, r.tl(), r.br(), cv::Scalar(0, 255, 0), 1);
+				Rect point(r.tl(), r.br());
+				//Mat crop = cleanImg(point);
+				//cout << point << endl;
+				predicted.push_back(point);
+			}
+		
+		return predicted;
 }
 
 int HOG_SVM::main_GG( int argc, char** argv )

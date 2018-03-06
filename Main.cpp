@@ -11,9 +11,9 @@ int main(int argc, char** argv)
 {
 	bool isTrain = false;
 
-	String videoPath = "D:/Senior_Project/Train HOG -2/Video/train/3.avi";
+	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE11.avi";
 
-	String svmPath = "D:/Senior_Project/head/my_detector3.yml";
+	String svmPath = "D:/Senior_Project/head/my_detector4.yml";
 
 	BGSubtraction BGSubtractionHeader;
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	}
 	else {
 		//BGSubtractionHeader.BackgroundSubtraction(videoPath,svmPath);
-		BGSubtractionHeader.BackgroundSubtraction_old();
+		BGSubtractionHeader.BackgroundSubtraction_old(videoPath,svmPath);
 	}
 
 	return 0;

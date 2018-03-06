@@ -1,6 +1,7 @@
 #include "BGSubtraction.h"
 #include "Blob.h"
 #include "HOG_SVM.h"
+
 const  Scalar SCALAR_BLACK =  Scalar(0.0, 0.0, 0.0);
 const  Scalar SCALAR_WHITE =  Scalar(255.0, 255.0, 255.0);
 const  Scalar SCALAR_BLUE =  Scalar(255.0, 0.0, 0.0);
@@ -9,7 +10,7 @@ const  Scalar SCALAR_RED =  Scalar(0.0, 0.0, 255.0);
 
 void BGSubtraction::BackgroundSubtraction(String videoPath,String svmPath) {
 
-	 VideoCapture capVideo;
+	 /*VideoCapture capVideo;
 
 	 Mat imgFrame1;
 	 Mat imgFrame2;
@@ -180,17 +181,17 @@ void BGSubtraction::BackgroundSubtraction(String videoPath,String svmPath) {
 		 waitKey(0);                         
 	}
 	
-	
+	*/
 }
 
-void BGSubtraction::BackgroundSubtraction_old()
+void BGSubtraction::BackgroundSubtraction_old(String videoPath, String svmPath)
 {
 	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame;
 	double th = 50;
-	char fileName[100] = "D:/Project_Oriental/Video Original/oriental/FE11.avi";
-	VideoCapture stream1(fileName);
+	VideoCapture stream1(videoPath);
 	stream1.read(bw);
 	int i = 1;
+	int k = 0;
 	while (1)
 	{
 		Mat image;
@@ -199,6 +200,8 @@ void BGSubtraction::BackgroundSubtraction_old()
 		}
 
 		stream1 >> image;
+		Mat newPoint = image.clone();
+		//resize(image, image, Size(image.cols*0.5, image.rows*0.5));
 		Mat o_image = image.clone();
 
 
@@ -208,8 +211,9 @@ void BGSubtraction::BackgroundSubtraction_old()
 			bg_im = first_frame;
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
 			GaussianBlur(bg_im_gray, bg_im_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
-			namedWindow("BG", 1);
-			imshow("BG", bg_im_gray);
+			//resize(bg_im_gray, bg_im_gray, Size(bg_im_gray.cols*0.5, bg_im_gray.rows*0.5));
+			//namedWindow("BGasd", 1);
+			//imshow("BGasd", bg_im_gray);
 		}
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
 		GaussianBlur(image_gray, image_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
@@ -226,21 +230,21 @@ void BGSubtraction::BackgroundSubtraction_old()
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
 		HOG_SVM HOG_SVMHeader;
-
+		vector<Rect> reversePoint,newPointList;
 		std::vector<std::vector<Point>> contours;
+	
 		findContours(bw,
 			contours,
 			RETR_EXTERNAL,
 			CHAIN_APPROX_NONE);
 
 		vector<double> areas(contours.size());
-		char buff[50];
 		for (int i = 0; i < contours.size(); i++)
 		{
 
 			areas[i] = contourArea(contours[i]);
 
-			printf("[%d] area=%.2f\n", i, areas[i]);
+		
 
 			Rect bb = boundingRect(contours[i]);
 			int sx = bb.tl().x;
@@ -250,46 +254,78 @@ void BGSubtraction::BackgroundSubtraction_old()
 			int cx = (sx + ex) / 2;
 			int cy = (sy + ey) / 2;
 
+			int tlx_o =0;
+			int tly_o = 0;
+			int brx_o = 0;
+			int bry_o = 0;
+
 			if (areas[i] > 1500)
 			{
-				int tlx = bb.tl().x - 50;
-				int tly = bb.tl().y - 50;
-				int brx = bb.br().x + 50;
-				int bry = bb.br().y + 50;
+				printf("[%d] area=%.2f\n", i, areas[i]);
+				 tlx_o = bb.tl().x - 25;
+				 tly_o = bb.tl().y - 25;
+				 brx_o = bb.br().x + 25;
+				 bry_o = bb.br().y + 25;
 
-				if (tlx <= 0) {
-					tlx = 0;
+				if (tlx_o <= 0) {
+					tlx_o = 0;
 				}
 
 
-				if (tly <= 0) {
-					tly = 0;
+				if (tly_o <= 0) {
+					tly_o = 0;
 				}
 
-				if (brx >= image.cols) {
-					brx = image.cols;
+				if (brx_o >= image.cols) {
+					brx_o = image.cols;
 				}
 
-				if (bry >= image.rows) {
-					bry = image.rows;
+				if (bry_o >= image.rows) {
+					bry_o = image.rows;
 				}
 
-				Rect pointCrop(Point(tlx, tly), Point(brx, bry));
+				Rect pointCrop(Point(tlx_o, tly_o), Point(brx_o, bry_o));
 				Mat crop = o_image(pointCrop);
 
-				//HOG_SVMHeader.test_trained_detector("D:/Senior_Project/head/my_detector4.yml", crop);
-				rectangle(image, bb, Scalar(255, 0, 0), 2);
-				drawMarker(image, Point(cx, cy), Scalar(255, 0, 0));
-				//sprintf_s(buff, "Pedestrian");
-				//putText(image, buff, Point(cx, cy + 20), 1, 1, Scalar(0, 0, 255), 1);
+				vector<Rect> predicted = HOG_SVMHeader.test_trained_detector(svmPath, crop);
+				if (predicted.size() <= 0) {
+					continue;
+				}
+				else {
+					for (size_t x = 0; x < predicted.size(); x++) {
+							int tlx = pointCrop.tl().x + predicted[x].tl().x;
+							int tly = pointCrop.tl().y + predicted[x].tl().y;
+
+							int brx = tlx + (predicted[x].br().x - predicted[x].tl().x);
+							int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
+
+							newPointList.push_back(Rect(Point(tlx, tly), Point(brx, bry)));
+
+					}
+
+					for (size_t z = 0; z < newPointList.size(); z++) {
+						rectangle(newPoint, newPointList[z], Scalar(255, 0, 0), 2);
+
+
+					}
+				}
 
 			}
+		
+	
+			
+
+		
 
 		}
-		imshow("Diff", diff_new);
-		imshow("BW", bw_new);
+		//imshow("Diff", diff_new);
+		//imshow("BW", bw_new);
 		imshow("Image", image);
+		imshow("newPoint", newPoint);
 		i++;
+		newPointList.clear();
+		reversePoint.clear();
+		
 		if (waitKey(20) >= 0)
 			break;
 	}
@@ -299,28 +335,27 @@ void BGSubtraction::BackgroundSubtraction_old()
 Mat BGSubtraction::templeteMatching(vector<Mat> obj , Mat templ)
 {
 	Mat img; Mat result;
+	Mat img_display;
 	String image_window = "Source Image";
 	String result_window = "Result window";
-	int match_method = CV_TM_SQDIFF_NORMED;
+	int match_method = CV_TM_SQDIFF;
 	namedWindow(image_window, CV_WINDOW_AUTOSIZE);
-	namedWindow(result_window, CV_WINDOW_AUTOSIZE);
-
+	//namedWindow(result_window, CV_WINDOW_AUTOSIZE);
+	templ.copyTo(img_display);
+	//resize(templ, img_display, Size(templ.cols*0.5, templ.rows*0.5));
 	/// Load image and template
 	for (int i = 0; i < obj.size(); i++) {
-		img = obj[i];
-
+		
 		/// Source image to display
-		Mat img_display;
-		img.copyTo(img_display);
+
 
 		/// Create the result matrix
-		int result_cols = img.cols - templ.cols + 1;
-		int result_rows = img.rows - templ.rows + 1;
+		//int result_cols = templ.cols - img.cols + 1;
+		//int result_rows = templ.rows - img.rows + 1;
 
-		result.create(result_rows, result_cols, CV_32FC1);
-
+		//result.create(result_rows, result_cols, CV_32FC1);
 		/// Do the Matching and Normalize
-		matchTemplate(img, templ, result, match_method);
+		matchTemplate(templ, obj[i], result, match_method);
 		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 
 		/// Localizing the best match with minMaxLoc
@@ -340,15 +375,13 @@ Mat BGSubtraction::templeteMatching(vector<Mat> obj , Mat templ)
 		}
 
 		/// Show me what you got
-		rectangle(img_display, matchLoc, Point(matchLoc.x + templ.cols, matchLoc.y + templ.rows), Scalar::all(0), 2, 8, 0);
-		rectangle(result, matchLoc, Point(matchLoc.x + templ.cols, matchLoc.y + templ.rows), Scalar::all(0), 2, 8, 0);
-
-		imshow(image_window, img_display);
-		imshow(result_window, result);
-
-		waitKey(0);
+		rectangle(img_display, matchLoc, Point(matchLoc.x + obj[i].cols, matchLoc.y + obj[i].rows), Scalar::all(0), 2, 8, 0);
+		//rectangle(result, matchLoc, Point(matchLoc.x + img.cols, matchLoc.y + img.rows), Scalar::all(0), 2, 8, 0);
 
 	}
+	imshow(image_window, img_display);
+	//imshow(result_window, result);
+
 	return Mat();
 }
 
