@@ -18,6 +18,5 @@ public:
 	void load_images(const String & dirname, vector< Mat > & img_lst, bool showImages);
 	void sample_neg(const vector< Mat > & full_neg_lst, vector< Mat > & neg_lst, const Size & size);
 	void computeHOGs(const Size wsize, const vector< Mat > & img_lst, vector< Mat > & gradient_lst, bool use_flip);
-	vector<Rect> test_trained_detector(String obj_det_filename, Mat ROI);
-	int main_GG(int argc, char** argv);
+	vector<Rect> test_trained_detector(String obj_det_filename, Mat ROI, bool doHardNegative,int & counter);
 };
