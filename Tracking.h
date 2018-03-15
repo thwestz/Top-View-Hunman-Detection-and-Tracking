@@ -11,6 +11,5 @@ using namespace cv;
 class Tracking {
 public:
 
-	vector<Rect2d> tracking_API(Mat frame, vector<Rect> ROIs, String trackingAlg
-		, vector<Ptr<Tracker> > algorithms, vector<Rect2d> objects, MultiTracker trackers);
+	MultiTracker tracking_API(Mat frame, vector<Rect> ROIs, MultiTracker currentTrackers);
 };

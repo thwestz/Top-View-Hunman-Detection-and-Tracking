@@ -3,7 +3,7 @@
 #include "Tracking.h"
 void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 {
-	
+
 	/*Mat camera_matrix = Mat(3, 3, CV_32FC1);
 	Mat newCamMat = Mat(3, 3, CV_32FC1);
 	Mat distCoeffs;
@@ -14,8 +14,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 	vector < Ptr<Tracker>> algorithms;
 	vector<Rect2d> objects;
-	MultiTracker trackers;
-	vector<Rect2d>  currentTrack;
+	MultiTracker currentTrack;
 	int counter = 0;
 	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame;
 	Mat showResultDetection;
@@ -27,8 +26,8 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	int k = 0;
 	while (1)
 	{
-		Mat image,test;
-		
+		Mat image, test;
+
 		if (!(stream1.read(image))) {
 			break;
 		}
@@ -40,15 +39,15 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
 		resize(newPoint, toTrackimg, Size(newPoint.cols * 2, newPoint.rows * 2));
-		
+
 		Mat o_image = image.clone();
 
 
 		if (i == 1)
 		{
 			first_frame = image;
-			//bg_im = first_frame;
-			bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_0.jpg");
+			bg_im = first_frame;
+			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_0.jpg");
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
 			GaussianBlur(bg_im_gray, bg_im_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		}
@@ -66,13 +65,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
 		HOG_SVM HOG_SVMHeader;
-		vector<Rect> reversePoint,newPointList, newPointListToTrack;
+		vector<Rect> reversePoint, newPointList, newPointListToTrack;
 		std::vector<std::vector<Point>> contours;
-	
-		findContours(bw,
-			contours,
-			RETR_EXTERNAL,
-			CHAIN_APPROX_NONE);
+
+		findContours(bw,contours,RETR_EXTERNAL,CHAIN_APPROX_NONE);
 
 		vector<double> areas(contours.size());
 		for (int i = 0; i < contours.size(); i++)
@@ -80,7 +76,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 			areas[i] = contourArea(contours[i]);
 
-		
+
 
 			Rect bb = boundingRect(contours[i]);
 			int sx = bb.tl().x;
@@ -90,18 +86,19 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			int cx = (sx + ex) / 2;
 			int cy = (sy + ey) / 2;
 
-			int tlx_o =0;
+			int tlx_o = 0;
 			int tly_o = 0;
 			int brx_o = 0;
 			int bry_o = 0;
 
 			if (areas[i] > 1500)
 			{
-				 tlx_o = bb.tl().x - 20;
-				 tly_o = bb.tl().y - 20;
-				 brx_o = bb.br().x + 20;
-				 bry_o = bb.br().y + 20;
 
+				tlx_o = bb.tl().x - 25;
+				tly_o = bb.tl().y - 25;
+				brx_o = bb.br().x + 25;
+				bry_o = bb.br().y + 25;
+				rectangle(image, bb, Scalar(0, 255, 0), 2);
 				if (tlx_o <= 0) {
 					tlx_o = 0;
 				}
@@ -121,20 +118,20 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 				Rect pointCrop(Point(tlx_o, tly_o), Point(brx_o, bry_o));
 				Mat crop = o_image(pointCrop);
-				vector<Rect> predicted = HOG_SVMHeader.test_trained_detector(svmPath, crop,true,counter);
+				vector<Rect> predicted = HOG_SVMHeader.test_trained_detector(svmPath, crop, true, counter);
 				if (predicted.size() <= 0) {
 					continue;
 				}
 				else {
 					for (size_t x = 0; x < predicted.size(); x++) {
-							int tlx = pointCrop.tl().x + predicted[x].tl().x;
-							int tly = pointCrop.tl().y + predicted[x].tl().y;
+						int tlx = pointCrop.tl().x + predicted[x].tl().x;
+						int tly = pointCrop.tl().y + predicted[x].tl().y;
 
-							int brx = tlx + (predicted[x].br().x - predicted[x].tl().x);
-							int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
+						int brx = tlx + (predicted[x].br().x - predicted[x].tl().x);
+						int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
 
-							newPointList.push_back(Rect(Point(tlx, tly), Point(brx, bry)));
-							newPointListToTrack.push_back(Rect(Point(tlx * 2, tly * 2), Point(brx * 2, bry * 2)));
+						newPointList.push_back(Rect(Point(tlx, tly), Point(brx, bry)));
+						newPointListToTrack.push_back(Rect(Point(tlx * 2, tly * 2), Point(brx * 2, bry * 2)));
 					}
 
 					for (size_t z = 0; z < newPointList.size(); z++) {
@@ -144,22 +141,21 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 						}
 					}
 
-			    }
+				}
 
 			}
-		
+
 		}
 
 		imshow("Image", image);
 		imshow("Diff", diff_im);
 		imshow("bw", bw);
 		imshow("newPoint", newPoint);
-		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack
-		//, "KCF"	,algorithms,objects,trackers);
+		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
 		i++;
 		newPointList.clear();
 		reversePoint.clear();
-		
+
 		if (waitKey(20) >= 0)
 			break;
 	}

@@ -11,9 +11,9 @@ int main(int argc, char** argv)
 {
 	bool isTrain = false;
 
-	String videoPath = "D:/Senior_Project/Train HOG -2/Video/train/4.avi";
+	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE11.avi";
 
-	String svmPath = "D:/Senior_Project/head/my_detector_hn_3.yml";
+	String svmPath = "D:/Senior_Project/head/my_detector_hn_4.yml";
 
 	BGSubtraction BGSubtractionHeader;
 

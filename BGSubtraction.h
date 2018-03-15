@@ -9,5 +9,5 @@ class BGSubtraction {
 public:
 
 
-	void BackgroundSubtraction(String videoPath,String svmPath);
+	void BackgroundSubtraction(String videoPath, String svmPath);
 };

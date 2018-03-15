@@ -1,367 +1,288 @@
-#include <stdio.h>
+/******************************************
+* OpenCV Tutorial: Ball Tracking using   *
+* Kalman Filter                          *
+******************************************/
+
+// Module "core"
+#include <opencv2/core/core.hpp>
+
+// Module "highgui"
+#include <opencv2/highgui/highgui.hpp>
+
+// Module "imgproc"
+#include <opencv2/imgproc/imgproc.hpp>
+
+// Module "video"
+#include <opencv2/video/video.hpp>
+
+// Output
 #include <iostream>
-#include <opencv2/opencv.hpp>
-#include <opencv2/xfeatures2d.hpp>
-using namespace cv;
+
+// Vector
+#include <vector>
+
 using namespace std;
-using namespace cv::xfeatures2d;
 
+// >>>>> Color to be tracked
+#define MIN_H_BLUE 200
+#define MAX_H_BLUE 300
+// <<<<< Color to be tracked
 
-Mat Compute_Homography(vector<Point2f> srcPts, vector<Point2f> dstPts);
 
 int main()
 {
-	//----------------------------------------------
-	// Training step:
-	//
-	// Read the reference image
-	// 
-	Mat img_ref = imread("D:/Computer Vision/1043_Chaiwat_HW02/pic2-1.jpg", IMREAD_GRAYSCALE);
-	// Specify the ROI of interest field
-	Rect roi;
-	roi.x = 250;
-	roi.y = 180;
-	roi.width = 80;
-	roi.height = 25;
+	// Camera frame
+	cv::Mat frame;
 
-	// Detect the keypoints and extract descriptors of the reference image
-	Ptr<SIFT> detector = SIFT::create();
-	std::vector<KeyPoint> keypoints_ref, keypoints_scene;
+	// >>>> Kalman Filter
+	int stateSize = 6;
+	int measSize = 4;
+	int contrSize = 0;
 
-	Mat descriptors_ref;
+	unsigned int type = CV_32F;
+	cv::KalmanFilter kf(stateSize, measSize, contrSize, type);
 
-	detector->detectAndCompute(img_ref, Mat(), keypoints_ref, descriptors_ref);
-	Mat img_ref_keypoints;
-	drawKeypoints(img_ref, keypoints_ref, img_ref_keypoints);
+	cv::Mat state(stateSize, 1, type);  // [x,y,v_x,v_y,w,h]
+	cv::Mat meas(measSize, 1, type);    // [z_x,z_y,z_w,z_h]
+										//cv::Mat procNoise(stateSize, 1, type)
+										// [E_x,E_y,E_v_x,E_v_y,E_w,E_h]
 
-	// Display the keypoint in the reference document image
-	imshow("Reference Document Image", img_ref_keypoints);
+										// Transition State Matrix A
+										// Note: set dT at each processing step!
+										// [ 1 0 dT 0  0 0 ]
+										// [ 0 1 0  dT 0 0 ]
+										// [ 0 0 1  0  0 0 ]
+										// [ 0 0 0  1  0 0 ]
+										// [ 0 0 0  0  1 0 ]
+										// [ 0 0 0  0  0 1 ]
+	cv::setIdentity(kf.transitionMatrix);
 
-	//----------------------------------------------
-	// Testing phase
+	// Measure Matrix H
+	// [ 1 0 0 0 0 0 ]
+	// [ 0 1 0 0 0 0 ]
+	// [ 0 0 0 0 1 0 ]
+	// [ 0 0 0 0 0 1 ]
+	kf.measurementMatrix = cv::Mat::zeros(measSize, stateSize, type);
+	kf.measurementMatrix.at<float>(0) = 1.0f;
+	kf.measurementMatrix.at<float>(7) = 1.0f;
+	kf.measurementMatrix.at<float>(16) = 1.0f;
+	kf.measurementMatrix.at<float>(23) = 1.0f;
 
-	// Read the test image
-	Mat img_scene = imread("D:/Computer Vision/1043_Chaiwat_HW02/pic2-3.jpg", IMREAD_GRAYSCALE);
+	// Process Noise Covariance Matrix Q
+	// [ Ex   0   0     0     0    0  ]
+	// [ 0    Ey  0     0     0    0  ]
+	// [ 0    0   Ev_x  0     0    0  ]
+	// [ 0    0   0     Ev_y  0    0  ]
+	// [ 0    0   0     0     Ew   0  ]
+	// [ 0    0   0     0     0    Eh ]
+	//cv::setIdentity(kf.processNoiseCov, cv::Scalar(1e-2));
+	kf.processNoiseCov.at<float>(0) = 1e-2;
+	kf.processNoiseCov.at<float>(7) = 1e-2;
+	kf.processNoiseCov.at<float>(14) = 5.0f;
+	kf.processNoiseCov.at<float>(21) = 5.0f;
+	kf.processNoiseCov.at<float>(28) = 1e-2;
+	kf.processNoiseCov.at<float>(35) = 1e-2;
 
-	// Detect the keypoints and extract descriptors of the test image
-	Mat descriptors_scene;
-	detector->detectAndCompute(img_scene, Mat(), keypoints_scene, descriptors_scene);
+	// Measures Noise Covariance Matrix R
+	cv::setIdentity(kf.measurementNoiseCov, cv::Scalar(1e-1));
+	// <<<< Kalman Filter
 
-	// Display the keypoint in the test image
-	Mat img_scene_keypoints;
-	drawKeypoints(img_scene, keypoints_scene, img_scene_keypoints);
-	imshow("Test Image", img_scene_keypoints);
+	// Camera Index
+	int idx = 0;
 
+	// Camera Capture
+	cv::VideoCapture cap;
 
-	//  Feature matching between the reference document image and the test image
-	BFMatcher matcher(NORM_L2);
-	std::vector< DMatch > matches;
-	matcher.match(descriptors_ref, descriptors_scene, matches);
-
-	Mat img_matches;
-	drawMatches(img_ref, keypoints_ref, img_scene, keypoints_scene, matches, img_matches);
-
-	imshow("Putative matches", img_matches);
-	waitKey(0);
-
-	//===============================
-	//-- RANSAC Homography estimation to localize the form area in the test image
-
-	//------------------------------------------------------------------
-	//// Start of RANSAC loop
-	vector<Point2f> src_pts, dst_pts;
-	vector<int> inlier_idx;
-
-	// Variable declaration
-	RNG rng; // variable for Random number generator
-	int iter, n_req_iters, i, j, n_pts, n_model_points, inlier_cnt,
-		best_inlier_cnt;
-	vector<int> idx;
-	vector<Point2f> sel_src_pts, sel_dst_pts, b_sel_src_pts, b_sel_dst_pts;
-	vector<double> err, best_err;
-	vector<uchar> inlier_mask, best_inlier_mask;
-	vector<DMatch> inlier_matches;
-	Mat best_Ha;
-
-	rng(getTickCount()); // Seed the random number generator
-	n_model_points = 4; // Number of minimum points
-						// required to calculate the transformation
-	n_pts = matches.size(); // Number of data points
-
-	inlier_mask.resize(n_pts); // Mask for inlier: 0=outlier, 1=inlier
-	best_inlier_mask.resize(n_pts); //
-	err.resize(n_pts); // Error for each match pair
-	best_err.resize(n_pts);
-	best_Ha.create(2, 3, CV_64F);
-	idx.resize(n_model_points);
-
-	idx.resize(n_model_points); // Indexes of data points used
-								// in each iteration
-	best_inlier_cnt = -1;
-	n_req_iters = 1000; // Initially set n_req_iters to 1000
-	printf("[0] n_req_iters=%d\n", n_req_iters);
-
-	src_pts.resize(n_pts);
-	dst_pts.resize(n_pts);
-
-	for (int i = 0; i < n_pts; i++) {
-		src_pts[i] = Point2f(keypoints_ref[matches[i].queryIdx].pt.x, keypoints_ref[matches[i].queryIdx].pt.y);
-		dst_pts[i] = Point2f(keypoints_scene[matches[i].trainIdx].pt.x, keypoints_scene[matches[i].trainIdx].pt.y);
+	// >>>>> Camera Settings
+	if (!cap.open(idx))
+	{
+		cout << "Webcam not connected.\n" << "Please verify\n";
+		return EXIT_FAILURE;
 	}
 
-	//------------------------------------------------------------------
-	//// Start of RANSAC loop
-	for (iter = 0; iter < n_req_iters; iter++)
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1024);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 768);
+	// <<<<< Camera Settings
+
+	cout << "\nHit 'q' to exit...\n";
+
+	char ch = 0;
+
+	double ticks = 0;
+	bool found = false;
+
+	int notFoundCount = 0;
+
+	// >>>>> Main loop
+	while (ch != 'q' && ch != 'Q')
 	{
-		// Step 1: Randomly select 4 pairs of matchings
-		for (i = 0; i < n_model_points; i = i + 1)
+		double precTick = ticks;
+		ticks = (double)cv::getTickCount();
+
+		double dT = (ticks - precTick) / cv::getTickFrequency(); //seconds
+
+																 // Frame acquisition
+		cap >> frame;
+
+		cv::Mat res;
+		frame.copyTo(res);
+
+		if (found)
 		{
-			for (;;) {
-				// Generate a random number between 0 to n_pts-1
-				idx[i] = rng.uniform(0, n_pts - 1);
-				// Check if the generated number is repeated to
-				// the previous one, if yes – re-generate another
-				for (j = 0; j < i; j++) {
-					if (idx[i] == idx[j])
-					{
-						break;
-					}
-				}
-				if (j == i) {
-					break;
-				}
+			// >>>> Matrix A
+			kf.transitionMatrix.at<float>(2) = dT;
+			kf.transitionMatrix.at<float>(9) = dT;
+			// <<<< Matrix A
+
+			cout << "dT:" << endl << dT << endl;
+
+			state = kf.predict();
+			cout << "State post:" << endl << state << endl;
+
+			cv::Rect predRect;
+			predRect.width = state.at<float>(4);
+			predRect.height = state.at<float>(5);
+			predRect.x = state.at<float>(0) - predRect.width / 2;
+			predRect.y = state.at<float>(1) - predRect.height / 2;
+
+			cv::Point center;
+			center.x = state.at<float>(0);
+			center.y = state.at<float>(1);
+			cv::circle(res, center, 2, CV_RGB(255, 0, 0), -1);
+
+			cv::rectangle(res, predRect, CV_RGB(255, 0, 0), 2);
+		}
+
+		// >>>>> Noise smoothing
+		cv::Mat blur;
+		cv::GaussianBlur(frame, blur, cv::Size(5, 5), 3.0, 3.0);
+		// <<<<< Noise smoothing
+
+		// >>>>> HSV conversion
+		cv::Mat frmHsv;
+		cv::cvtColor(blur, frmHsv, CV_BGR2HSV);
+		// <<<<< HSV conversion
+
+		// >>>>> Color Thresholding
+		// Note: change parameters for different colors
+		cv::Mat rangeRes = cv::Mat::zeros(frame.size(), CV_8UC1);
+		cv::inRange(frmHsv, cv::Scalar(MIN_H_BLUE / 2, 100, 80),
+			cv::Scalar(MAX_H_BLUE / 2, 255, 255), rangeRes);
+		// <<<<< Color Thresholding
+
+		// >>>>> Improving the result
+		cv::erode(rangeRes, rangeRes, cv::Mat(), cv::Point(-1, -1), 2);
+		cv::dilate(rangeRes, rangeRes, cv::Mat(), cv::Point(-1, -1), 2);
+		// <<<<< Improving the result
+
+		// Thresholding viewing
+		cv::imshow("Threshold", rangeRes);
+
+		// >>>>> Contours detection
+		vector<vector<cv::Point> > contours;
+		cv::findContours(rangeRes, contours, CV_RETR_EXTERNAL,
+			CV_CHAIN_APPROX_NONE);
+		// <<<<< Contours detection
+
+		// >>>>> Filtering
+		vector<vector<cv::Point> > balls;
+		vector<cv::Rect> ballsBox;
+		for (size_t i = 0; i < contours.size(); i++)
+		{
+			cv::Rect bBox;
+			bBox = cv::boundingRect(contours[i]);
+
+			float ratio = (float)bBox.width / (float)bBox.height;
+			if (ratio > 1.0f)
+				ratio = 1.0f / ratio;
+
+			// Searching for a bBox almost square
+			if (ratio > 0.75 && bBox.area() >= 400)
+			{
+				balls.push_back(contours[i]);
+				ballsBox.push_back(bBox);
 			}
 		}
-		// 
+		// <<<<< Filtering
 
+		cout << "Balls found:" << ballsBox.size() << endl;
 
-		sel_src_pts.resize(n_model_points);
-		sel_dst_pts.resize(n_model_points);
-		
-		// Step 2: Compute the homography transformation from the selected 4 pairs
-		for (i = 0; i < n_model_points; i = i + 1) {
-			sel_src_pts[i] = src_pts[idx[i]];
-			sel_dst_pts[i] = dst_pts[idx[i]];
+		// >>>>> Detection result
+		for (size_t i = 0; i < balls.size(); i++)
+		{
+			cv::drawContours(res, balls, i, CV_RGB(20, 150, 20), 1);
+			cv::rectangle(res, ballsBox[i], CV_RGB(0, 255, 0), 2);
+
+			cv::Point center;
+			center.x = ballsBox[i].x + ballsBox[i].width / 2;
+			center.y = ballsBox[i].y + ballsBox[i].height / 2;
+			cv::circle(res, center, 2, CV_RGB(20, 150, 20), -1);
+
+			stringstream sstr;
+			sstr << "(" << center.x << "," << center.y << ")";
+			cv::putText(res, sstr.str(),
+				cv::Point(center.x + 3, center.y - 3),
+				cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(20, 150, 20), 2);
 		}
-		Mat Ha = Compute_Homography(sel_src_pts, sel_dst_pts);
+		// <<<<< Detection result
 
+		// >>>>> Kalman Update
+		if (balls.size() == 0)
+		{
+			notFoundCount++;
+			cout << "notFoundCount:" << notFoundCount << endl;
+			if (notFoundCount >= 100)
+			{
+				found = false;
+			}
+			/*else
+			kf.statePost = state;*/
+		}
+		else
+		{
+			notFoundCount = 0;
 
-		// Step 3: Compute Error of all matching
-		// decide if each point is inlier or outlier
+			meas.at<float>(0) = ballsBox[0].x + ballsBox[0].width / 2;
+			meas.at<float>(1) = ballsBox[0].y + ballsBox[0].height / 2;
+			meas.at<float>(2) = (float)ballsBox[0].width;
+			meas.at<float>(3) = (float)ballsBox[0].height;
 
-		double reProjTh = 5;
+			if (!found) // First detection!
+			{
+				// >>>> Initialization
+				kf.errorCovPre.at<float>(0) = 1; // px
+				kf.errorCovPre.at<float>(7) = 1; // px
+				kf.errorCovPre.at<float>(14) = 1;
+				kf.errorCovPre.at<float>(21) = 1;
+				kf.errorCovPre.at<float>(28) = 1; // px
+				kf.errorCovPre.at<float>(35) = 1; // px
 
-		inlier_cnt = 0;
-		for (i = 0; i < n_pts; i = i + 1) {
-			double x = src_pts[i].x;
-			double y = src_pts[i].y;
+				state.at<float>(0) = meas.at<float>(0);
+				state.at<float>(1) = meas.at<float>(1);
+				state.at<float>(2) = 0;
+				state.at<float>(3) = 0;
+				state.at<float>(4) = meas.at<float>(2);
+				state.at<float>(5) = meas.at<float>(3);
+				// <<<< Initialization
 
-			Mat p(3, 1, CV_64FC1);
-			p.at<double>(0, 0) = x;
-			p.at<double>(1, 0) = y;
-			p.at<double>(2, 0) = 1;
-			Mat pp = Ha * p;
+				kf.statePost = state;
 
-			double xp = pp.at<double>(0, 0) / pp.at<double>(2, 0);
-			double yp = pp.at<double>(1, 0) / pp.at<double>(2, 0);
-
-			double a = xp - dst_pts[i].x;
-			double b = yp - dst_pts[i].y;
-
-			err[i] = a*a + b*b;
-			if (err[i] < reProjTh*reProjTh) {
-				inlier_mask[i] = 1;
-				inlier_cnt++;
+				found = true;
 			}
 			else
-				inlier_mask[i] = 0;
+				kf.correct(meas); // Kalman Correction
+
+			cout << "Measure matrix:" << endl << meas << endl;
 		}
-		// Step 4: Check if the current homography is better than the one that we kept
-		// Adaptively re-compute the number of iterations required to do random sampling
-		if (inlier_cnt > best_inlier_cnt) {
-			best_inlier_cnt = inlier_cnt;
-			Ha.copyTo(best_Ha);
-			best_err.resize(n_pts);
-			best_inlier_mask.resize(n_pts);
-			for (i = 0; i < n_pts; i++) {
-				best_err[i] = err[i];
-				best_inlier_mask[i] = inlier_mask[i];
-			}
-			printf("[%d] best_inlier_cnt=%d\n", iter, best_inlier_cnt);
-			// Adaptive re-compute the number of iterations
-			// required to do random sampling
-			double confidence_p, outlier_ratio_e, numer, denom;
-			confidence_p = 0.90;
-			outlier_ratio_e = (double)(n_pts - best_inlier_cnt) / n_pts;
-			numer = log(1 - confidence_p + DBL_EPSILON);
-			double tmp = pow((1.0 - outlier_ratio_e), n_model_points);
-			denom = log(1 - tmp + DBL_EPSILON);
-			n_req_iters = round(numer / denom);
-			printf("[%d] n_req_iters=%d\n", iter, n_req_iters);
-		}
+		// <<<<< Kalman Update
 
+		// Final result
+		cv::imshow("Tracking", res);
+
+		// User key
+		ch = cv::waitKey(1);
 	}
-	printf("# iters actually run = %d\n", iter);
-	printf("best inlier cnt = %d\n", best_inlier_cnt);
-	//// End of RANSAC loop
-	//------------------------------------------------------------------
+	// <<<<< Main loop
 
-	// Display the inlier matches detected by RANSAC
-	// Also display the four corners of the form area in the test image
-	vector<DMatch> matchesRANSAC;
-	matchesRANSAC.resize(best_inlier_cnt);
-	int qq = 0;
-	for (int i = 0; i < n_pts; i++) {
-		if (best_inlier_mask[i] == 1) {
-			matchesRANSAC[qq++] = matches[i];
-		}
-	}
-
-	Mat img_matchesRANSAC;
-	drawMatches(img_ref, keypoints_ref, img_scene, keypoints_scene, matchesRANSAC, img_matchesRANSAC);
-
-	imshow("RANSAC", img_matchesRANSAC);
-	waitKey(0);
-	//find corners
-	vector<Point2f> ref_corners(4);
-	ref_corners[0] = Point(0, 0);
-	ref_corners[1] = Point(img_ref.cols, 0);
-	ref_corners[2] = Point(img_ref.cols, img_ref.rows);
-	ref_corners[3] = Point(0, img_ref.rows);
-
-
-	vector<Point2f> scene_corners(4);
-	for (int i = 0; i < scene_corners.size(); i++) {
-		Mat p(3, 1, CV_64FC1);
-		p.at<double>(0, 0) = ref_corners[i].x;
-		p.at<double>(1, 0) = ref_corners[i].y;
-		p.at<double>(2, 0) = 1;
-		Mat pp = best_Ha * p;
-		scene_corners[i].x = pp.at<double>(0, 0) / pp.at<double>(2, 0);
-		scene_corners[i].y = pp.at<double>(1, 0) / pp.at<double>(2, 0);
-	}
-	Mat img_scene_corners;
-	cvtColor(img_scene, img_scene_corners, COLOR_GRAY2BGR);
-	line(img_scene_corners, scene_corners[0], scene_corners[1], Scalar(0, 255, 0), 4);
-	line(img_scene_corners, scene_corners[1], scene_corners[2], Scalar(0, 255, 0), 4);
-	line(img_scene_corners, scene_corners[2], scene_corners[3], Scalar(0, 255, 0), 4);
-	line(img_scene_corners, scene_corners[3], scene_corners[0], Scalar(0, 255, 0), 4);
-
-	Mat img_ref_roi = img_ref.clone();
-	line(img_ref_roi, Point(roi.x, roi.y), Point(roi.x + roi.width, roi.y), Scalar(0, 255, 0), 2);
-	line(img_ref_roi, Point(roi.x + roi.width, roi.y), Point(roi.x + roi.width, roi.y + roi.height), Scalar(0, 255, 0), 2);
-	line(img_ref_roi, Point(roi.x + roi.width, roi.y + roi.height), Point(roi.x, roi.y + roi.height), Scalar(0, 255, 0), 2);
-	line(img_ref_roi, Point(roi.x, roi.y + roi.height), Point(roi.x, roi.y), Scalar(0, 255, 0), 2);
-
-	
-	vector<Point2i> ref_roi_corners(4);
-	ref_roi_corners[0] = Point(roi.x, roi.y);
-	ref_roi_corners[1] = Point(roi.x + roi.width, roi.y);
-	ref_roi_corners[2] = Point(roi.x + roi.width, roi.y + roi.height);
-	ref_roi_corners[3] = Point(roi.x, roi.y + roi.height);
-
-	Mat img_scene_roi_corners;
-	cvtColor(img_scene, img_scene_roi_corners, COLOR_GRAY2BGR);
-
-	vector<Point2i> scene_roi_corners(4);
-	for (int i = 0; i < scene_corners.size(); i++) {
-		Mat p(3, 1, CV_64FC1);
-		p.at<double>(0, 0) = ref_roi_corners[i].x;
-		p.at<double>(1, 0) = ref_roi_corners[i].y;
-		p.at<double>(2, 0) = 1;
-		Mat pp = best_Ha * p;
-		scene_roi_corners[i].x = pp.at<double>(0, 0) / pp.at<double>(2, 0);
-		scene_roi_corners[i].y = pp.at<double>(1, 0) / pp.at<double>(2, 0);
-	}
-
-	line(img_scene_roi_corners, scene_roi_corners[0], scene_roi_corners[1], Scalar(0, 255, 0), 2);
-	line(img_scene_roi_corners, scene_roi_corners[1], scene_roi_corners[2], Scalar(0, 255, 0), 2);
-	line(img_scene_roi_corners, scene_roi_corners[2], scene_roi_corners[3], Scalar(0, 255, 0), 2);
-	line(img_scene_roi_corners, scene_roi_corners[3], scene_roi_corners[0], Scalar(0, 255, 0), 2);
-
-	// Calculate the ROI of interest field by using the homography
-	Mat field(roi.size(), CV_8UC1);
-	for (int y = 0; y < field.rows; y++) {
-		for (int x = 0; x < field.cols; x++) {
-			Mat p(3, 1, CV_64FC1);
-			p.at<double>(0, 0) = x + roi.x;
-			p.at<double>(1, 0) = y + roi.y;
-			p.at<double>(2, 0) = 1;
-			Mat pp = best_Ha * p;
-			int xp = pp.at<double>(0, 0) / pp.at<double>(2, 0);
-			int yp = pp.at<double>(1, 0) / pp.at<double>(2, 0);
-			double a = ceil(xp) - xp;
-			double b = ceil(yp) - yp;
-			int  i = xp;
-			int  j = yp;
-			int pixel = 0;
-			pixel += a*b *img_scene.at<uchar>(j, i);
-			pixel += (1 - a)*b *img_scene.at<uchar>(j, i + 1);
-			pixel += a*(1 - b) *img_scene.at<uchar>(j + 1, i);
-			pixel += (1 - a)*(1 - b) *img_scene.at<uchar>(j + 1, i + 1);
-			field.at<uchar>(y, x) = saturate_cast<uchar>(pixel);
-
-		}
-	}
-	imshow("Form Extraction : Test ROI", img_scene_roi_corners);
-	imshow("ROI", field);
-	waitKey(0);
-	// Warp the image in the ROI of interest field into the rectified image
-
-	// Display the warped ROI
-	Mat img_DocROI;
-	drawMatches(img_ref, keypoints_ref, img_scene_corners, keypoints_scene, matchesRANSAC, img_DocROI);
-	imshow("Form Extraction: Document ROI", img_DocROI);
-	waitKey(0);
-	return 0;
+	return EXIT_SUCCESS;
 }
-
-
-Mat Compute_Homography(vector<Point2f> srcPts, vector<Point2f> dstPts)
-{
-	int n = 4;
-	Mat A, B;
-	A = Mat::zeros(2 * n, 9, CV_64FC1);
-	B = Mat::zeros(2 * n, 1, CV_64FC1);
-	for (int i = 0; i < 4; i++)
-	{
-		float x = srcPts[i].x;
-		float y = srcPts[i].y;
-		float xp = dstPts[i].x;
-		float yp = dstPts[i].y;
-
-		A.at<double>((2 * i) + 0, 0) = x;
-		A.at<double>((2 * i) + 0, 1) = y;
-		A.at<double>((2 * i) + 0, 2) = 1;
-		A.at<double>((2 * i) + 0, 6) = -xp * x;
-		A.at<double>((2 * i) + 0, 7) = -xp * y;
-		A.at<double>((2 * i) + 0, 8) = -xp;
-		A.at<double>((2 * i) + 1, 3) = x;
-		A.at<double>((2 * i) + 1, 4) = y;
-		A.at<double>((2 * i) + 1, 5) = 1;
-		A.at<double>((2 * i) + 1, 6) = -yp*x;
-		A.at<double>((2 * i) + 1, 7) = -yp*y;
-		A.at<double>((2 * i) + 1, 8) = -yp;
-
-		B.at<double>((2 * i) + 0, 0) = 0;
-		B.at<double>((2 * i) + 1, 0) = 0;
-	}
-
-	Mat xvec;
-	Mat AtA;
-	mulTransposed(A, AtA, true);
-	Mat H(3, 3, CV_64F);
-	Mat eigenVa, eigenVec;
-	eigen(AtA, eigenVa, eigenVec);
-
-	int k = 0;
-	for (int j = 0; j < H.rows; j++) {
-		for (int i = 0; i < H.cols; i++) {
-			H.at<double>(j, i) = eigenVec.at<double>(8, k);
-			k++;
-		}
-	}
-
-	return H;
-}
-

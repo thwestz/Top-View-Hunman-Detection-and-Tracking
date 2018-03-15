@@ -43,8 +43,8 @@ int main()
 	RNG rng;
 	rng(getTickCount());
 
-	glob("D:/Senior_Project/head/pic", pos_files);
-	glob("D:/Senior_Project/head/point", point_files);
+	glob("D:/Project_Oriental/Test train HOG -1/FishEye/dataset_image", pos_files);
+	glob("D:/Project_Oriental/Test train HOG -1/FishEye/dataset_point", point_files);
 
 	int k;
 	k = 0;
@@ -83,12 +83,13 @@ int main()
 				Mat crop = image(roi);
 				
 				//cout << crop.rows << "    " << crop.cols << "\n\n";
-				imshow("Original", image);
-				imshow("Crop", crop);
+				//imshow("Original", image);
+				//imshow("Crop", crop);
 				//clog << startPoint << endPoint << endl;
-				imwrite("D:/Senior_Project/head/crop/images_" + to_string(count) + ".jpg", crop);
+				resize(crop, crop,Size(64,64));
+				imwrite("D:/Project_Oriental/Test train HOG -1/FishEye/Crop/images_" + to_string(count) + ".jpg", crop);
 
-				bool jitter = true;
+				bool jitter = false;
 				if (jitter) {
 					// jit grand x
 					jittering(10,pointList[y], pointList[j],image,true,count);
@@ -136,7 +137,7 @@ int main()
 
 			Rect jROI(startPoint, endPoint);
 			Mat jitImg = image(jROI);
-			imwrite("D:/Senior_Project/head/crop/images_J_" + to_string(numJit) + "_"+ to_string(count) + ".jpg", jitImg);
+			imwrite("D:/Senior_Project/head/crop_floor18_2/images_J_" + to_string(numJit) + "_"+ to_string(count) + ".jpg", jitImg);
 		}
 		else {
 			Point startPoint = Point(pY.x, pY.y + numJit);
@@ -162,7 +163,8 @@ int main()
 
 			Rect jROI(startPoint, endPoint);
 			Mat jitImg = image(jROI);
-			imwrite("D:/Senior_Project/head/crop/images_J_" + to_string(numJit) + "_" + to_string(count) + ".jpg", jitImg);
+			
+			imwrite("D:/Senior_Project/head/crop_floor18_2/images_J_" + to_string(numJit) + "_" + to_string(count) + ".jpg", jitImg);
 
 		}
 	}
