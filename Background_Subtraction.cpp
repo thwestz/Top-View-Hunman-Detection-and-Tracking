@@ -34,8 +34,8 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 		stream1 >> image;
 		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
-		/*resize(test, test, Size(800, 600));
-		undistort(test, image, camera_matrix, distCoeffs);*/
+		resize(image, image, Size(1024, 576));
+		//undistort(test, image, camera_matrix, distCoeffs);*/
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
 		resize(newPoint, toTrackimg, Size(newPoint.cols * 2, newPoint.rows * 2));
@@ -55,10 +55,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		GaussianBlur(image_gray, image_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		cv::Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
+		cv::Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 		cv::dilate(bw, bw, structuringElement7x7);
 		cv::dilate(bw, bw, structuringElement7x7);
-		Mat SE(5, 5, CV_8U, Scalar(1));
+		Mat SE(7, 7, CV_8U, Scalar(1));
 		Mat cleaned_im;
 		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
 		Mat diff_new, bw_new;
@@ -127,11 +127,11 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 						int tlx = pointCrop.tl().x + predicted[x].tl().x;
 						int tly = pointCrop.tl().y + predicted[x].tl().y;
 
-						int brx = tlx + (predicted[x].br().x - predicted[x].tl().x);
-						int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
+						int brx = tlx + (predicted[x].br().x - predicted[x].tl().x)+80;
+						int bry = tly + (predicted[x].br().y - predicted[x].tl().y)+80;
 
 						newPointList.push_back(Rect(Point(tlx, tly), Point(brx, bry)));
-						newPointListToTrack.push_back(Rect(Point(tlx * 2, tly * 2), Point(brx * 2, bry * 2)));
+						newPointListToTrack.push_back(Rect(Point(tlx*2, tly*2), Point(brx*2, bry*2)));
 					}
 
 					for (size_t z = 0; z < newPointList.size(); z++) {
@@ -151,7 +151,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		imshow("Diff", diff_im);
 		imshow("bw", bw);
 		imshow("newPoint", newPoint);
-		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
 		i++;
 		newPointList.clear();
 		reversePoint.clear();

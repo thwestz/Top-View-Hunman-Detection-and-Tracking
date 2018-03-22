@@ -10,10 +10,12 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	bool isTrain = false;
+	String videoPath = "D:/ProjectCCTV.avi";
+	
+	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
 
-	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE11.avi";
-
-	String svmPath = "D:/Senior_Project/head/my_detector_hn_4.yml";
+	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
+	String svmPath = "D:/HW01_Vision_57102010274/CP461_HW01/CP461_HW01/Project/my_detector_hn_4.yml";
 
 	BGSubtraction BGSubtractionHeader;
 
