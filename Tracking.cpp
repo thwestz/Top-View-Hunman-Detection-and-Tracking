@@ -39,6 +39,18 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 		else if (ROIs.size() > currentTrackers.getObjects().size()) {
 			
 		}
+		for (size_t i = 0; i < ROIs.size(); i++)
+		{
+			Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[i];
+			if (overlap.area() > 0) {
+				printf_s("%f", overlap.area());
+				/*algorithms.push_back(createTrackerByName("KCF"));
+				objects.push_back(currentTrackers.getObjects()[i]);
+				continue;*/
+				break;
+			}
+		}
+
 	}
 
 	currentTrackers.add(algorithms, frame, objects);

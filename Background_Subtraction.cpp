@@ -34,7 +34,6 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		}
 
 		stream1 >> image;
-
 		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
 		resize(image, image, Size(1024, 576));
 		//undistort(test, image, camera_matrix, distCoeffs);*/

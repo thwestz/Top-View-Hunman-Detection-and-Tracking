@@ -126,7 +126,9 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	Mat cleanImg = img.clone();
 	double t = (double)getTickCount();
 
-	hog.detectMultiScale(img, found, 0, Size(4, 4) ,Size(0, 0), 1.15);
+
+	hog.detectMultiScale(img, found, 0, Size(8, 8), Size(0, 0), 1.25);
+
 	if (found.size() != 0) {
 
 
@@ -155,7 +157,8 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 			if (doHardNegative) {
 				Mat crop = cleanImg(point);
 				resize(crop, crop, Size(64, 64));
-				imwrite("D:/hard_negative/image_19_"
+				imwrite("D:/hard_negative/image_2_"
+
 					+ to_string(counter) + ".jpg", crop);
 				counter++;
 			}
