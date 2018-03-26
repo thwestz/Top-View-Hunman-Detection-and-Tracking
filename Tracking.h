@@ -10,5 +10,5 @@ using namespace std;
 using namespace cv;
 class Tracking {
 public:
-	MultiTracker tracking_API(Mat frame, vector<Rect> ROIs, MultiTracker currentTrackers);
+	MultiTracker tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers);
 };

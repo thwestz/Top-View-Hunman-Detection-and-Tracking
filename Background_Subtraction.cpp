@@ -22,6 +22,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	double th = 50;
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
+	//stream1.set(CAP_PROP_POS_FRAMES, 600);
 	int i = 1;
 	int k = 0;
 	while (1)
@@ -33,12 +34,13 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		}
 
 		stream1 >> image;
+
 		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
 		resize(image, image, Size(1024, 576));
 		//undistort(test, image, camera_matrix, distCoeffs);*/
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
-		resize(newPoint, toTrackimg, Size(newPoint.cols * 2, newPoint.rows * 2));
+		resize(newPoint, toTrackimg, Size(newPoint.cols, newPoint.rows));
 
 		Mat o_image = image.clone();
 
@@ -47,7 +49,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		{
 			first_frame = image;
 			bg_im = first_frame;
-			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_0.jpg");
+			//bg_im = imread("D:/Project/Resource/bg.jpg");
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
 			GaussianBlur(bg_im_gray, bg_im_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		}
@@ -58,17 +60,18 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		cv::Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 		cv::dilate(bw, bw, structuringElement7x7);
 		cv::dilate(bw, bw, structuringElement7x7);
-		Mat SE(7, 7, CV_8U, Scalar(1));
+		Mat SE(5, 5, CV_8U, Scalar(1));
+
 		Mat cleaned_im;
-		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
+		//morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
 		Mat diff_new, bw_new;
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
 		HOG_SVM HOG_SVMHeader;
-		vector<Rect> reversePoint, newPointList, newPointListToTrack;
+		vector<Rect2d> reversePoint, newPointList, newPointListToTrack;
 		std::vector<std::vector<Point>> contours;
 
-		findContours(bw,contours,RETR_EXTERNAL,CHAIN_APPROX_NONE);
+		findContours(bw, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
 
 		vector<double> areas(contours.size());
 		for (int i = 0; i < contours.size(); i++)
@@ -91,7 +94,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			int brx_o = 0;
 			int bry_o = 0;
 
-			if (areas[i] > 1500)
+			if (areas[i] > 1000)
 			{
 
 				tlx_o = bb.tl().x - 25;
@@ -127,11 +130,11 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 						int tlx = pointCrop.tl().x + predicted[x].tl().x;
 						int tly = pointCrop.tl().y + predicted[x].tl().y;
 
-						int brx = tlx + (predicted[x].br().x - predicted[x].tl().x)+80;
-						int bry = tly + (predicted[x].br().y - predicted[x].tl().y)+80;
+						int brx = tlx + (predicted[x].br().x - predicted[x].tl().x);
+						int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
 
-						newPointList.push_back(Rect(Point(tlx, tly), Point(brx, bry)));
-						newPointListToTrack.push_back(Rect(Point(tlx*2, tly*2), Point(brx*2, bry*2)));
+						newPointList.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
+						newPointListToTrack.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
 					}
 
 					for (size_t z = 0; z < newPointList.size(); z++) {

@@ -2,74 +2,54 @@
 #include "samples_utility.cpp"
 #include "Math.h"
 
+MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers) {
 
-MultiTracker Tracking::tracking_API(Mat frame, vector<Rect> ROIs, MultiTracker currentTrackers) {
 	vector<Ptr<Tracker> > algorithms;
 	MultiTracker temptrackers;
 	//temptrackers.clear();
 	temptrackers = currentTrackers;
-	currentTrackers.clear();
 	vector<Rect2d> objects;
-	for (size_t i = 0; i < ROIs.size(); i++)
-	{
-		if (temptrackers.getObjects().size() == 0) {
-			algorithms.push_back(createTrackerByName("KCF"));
+	Point centerPosition;
+
+	//first time to add object
+	if (currentTrackers.getObjects().size() == 0) {
+		for (size_t i = 0; i < ROIs.size(); i++)
+		{
+			algorithms.push_back(createTrackerByName("MIL"));
+			//Rect2d resizeROI(Point(ROIs[i].tl().x + 30, ROIs[i].tl().y + 30),Point(ROIs[i].br().x + 30 , ROIs[i].br().y + 30));
 			objects.push_back(ROIs[i]);
-			temptrackers.add(algorithms[i], frame, objects[i]);
 			continue;
 		}
-		/*else
-		{
-			int sx = ROIs[i].tl().x;
-			int sy = ROIs[i].tl().y;
-			int ex = ROIs[i].br().x - 1;
-			int ey = ROIs[i].br().y - 1;
-			int cx = (sx + ex) / 2;
-			int cy = (sy + ey) / 2;
-			Point centerROI(cx, cy);
-			for (size_t j = 0; j < temptrackers.getObjects().size(); j++)
+	}
+	else {
+		if (ROIs.size() == currentTrackers.getObjects().size()) {
+			for (size_t i = 0; i < ROIs.size(); i++)
 			{
-				//if(temptrackers.getObjects() <= )
-				int kx = temptrackers.getObjects()[j].tl().x;
-				int ky = temptrackers.getObjects()[j].tl().y;
-				int jx = temptrackers.getObjects()[j].br().x - 1;
-				int jy = temptrackers.getObjects()[j].br().y - 1;
-				int vx = (kx + jx) / 2;
-				int vy = (ky + jy) / 2;
-				Point centerNew(vx, vy);
-				if (sqrt(pow(centerNew.x-centerROI.x,2)-pow(centerNew.y-centerROI.y,2))<=30) {
-					//continue;
+				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[i];
+				if (overlap.area() > 0) {
+					printf_s("%lf", overlap.area());
+					/*algorithms.push_back(createTrackerByName("KCF"));
+					objects.push_back(currentTrackers.getObjects()[i]);
+					continue;*/
 					break;
 				}
-				else
-				{
-					algorithms.push_back(createTrackerByName("KCF"));
-					objects.push_back(ROIs[i]);
-					currentTrackers.add(algorithms[i], frame, objects[i]);
-				}
+
 			}
-		}*/
+		}
+		else if (ROIs.size() > currentTrackers.getObjects().size()) {
+			
+		}
 	}
 
+	currentTrackers.add(algorithms, frame, objects);
+	currentTrackers.update(frame);
 
-	temptrackers.update(frame);
-
-
-	for (unsigned i = 0; i < temptrackers.getObjects().size(); i++) {
-		int kx = (temptrackers.getObjects()[i].tl().x);
-		int ky = (temptrackers.getObjects()[i].tl().y)/6;
-		int jx = (temptrackers.getObjects()[i].br().x - 81);
-		int jy = (temptrackers.getObjects()[i].br().y - 81)*1.5;
-		int vx = (kx + jx) / 2;
-		int vy = (ky + jy) / 2;
-		Point centerNew(vx, vy);
-		rectangle(frame, temptrackers.getObjects()[i], Scalar(255, 0, 0), 2, 1);
-		circle(frame, centerNew,3, Scalar(0, 255, 0), -1);
-
+	for (unsigned i = 0; i < currentTrackers.getObjects().size(); i++) {
+		rectangle(frame, currentTrackers.getObjects()[i], Scalar(255, 0, 0), 2, 1);
+		//circle(frame, temptrackers.getObjects[i], 3, Scalar(0, 255, 0), -1);
 	}
-	resize(frame, frame, Size(1024, 576));
+	//resize(frame, frame, Size(frame.cols / 3, frame.rows / 3));
 	imshow("tracker", frame);
-
-
 	return currentTrackers;
+
 }
