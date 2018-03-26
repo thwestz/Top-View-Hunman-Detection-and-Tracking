@@ -10,11 +10,16 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	bool isTrain = false;
+	String videoPath = "D:/ProjectCCTV.avi";
 
-	String videoPath = "E:/20180326/2.avi";
+	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
 
-//	String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
+	//String videoPath = "E:/20180326/2.avi";
+
+	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
 	String svmPath = "D:/my_detector_hn_4.yml";
+
+
 
 	BGSubtraction BGSubtractionHeader;
 
@@ -23,7 +28,7 @@ int main(int argc, char** argv)
 	}
 	else {
 		//BGSubtractionHeader.BackgroundSubtraction(videoPath,svmPath);
-		BGSubtractionHeader.BackgroundSubtraction(videoPath,svmPath);
+		BGSubtractionHeader.BackgroundSubtraction(videoPath, svmPath);
 	}
 
 	return 0;
