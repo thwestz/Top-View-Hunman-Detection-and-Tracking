@@ -9,6 +9,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	//temptrackers.clear();
 	temptrackers = currentTrackers;
 	vector<Rect2d> objects;
+
 	Point centerPosition;
 
 	//first time to add object
@@ -20,40 +21,31 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 			objects.push_back(ROIs[i]);
 			continue;
 		}
+		currentTrackers.add(algorithms, frame, objects);
 	}
-	else {
-		if (ROIs.size() == currentTrackers.getObjects().size()) {
-			for (size_t i = 0; i < ROIs.size(); i++)
-			{
-				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[i];
-				if (overlap.area() > 0) {
-					printf_s("%lf", overlap.area());
-					/*algorithms.push_back(createTrackerByName("KCF"));
-					objects.push_back(currentTrackers.getObjects()[i]);
-					continue;*/
-					break;
-				}
-
-			}
-		}
-		else if (ROIs.size() > currentTrackers.getObjects().size()) {
-			
-		}
+	else if (ROIs.size() > currentTrackers.getObjects().size() || ROIs.size() < currentTrackers.getObjects().size()) {
 		for (size_t i = 0; i < ROIs.size(); i++)
 		{
-			Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[i];
-			if (overlap.area() > 0) {
-				printf_s("%f", overlap.area());
-				/*algorithms.push_back(createTrackerByName("KCF"));
-				objects.push_back(currentTrackers.getObjects()[i]);
-				continue;*/
-				break;
+			for (size_t j = 0; j < currentTrackers.getObjects().size(); j++)
+			{
+				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[j];
+				//printf_s("%s %f %s", "OVERLAP", overlap.area(), "\n");
+				if (overlap.area() / 100.00 < 0.80 && overlap.area() != 0) {
+					printf_s("%s %f %s", "OVERLAP", overlap.area() / 100.00, "\n");
+					Ptr<Tracker>  newAlgor;
+					newAlgor = createTrackerByName("MIL");
+					//objects.push_back(ROIs[i]);
+					currentTrackers.add(newAlgor, frame, ROIs[i]);
+					break;
+				}
 			}
 		}
 
 	}
 
-	currentTrackers.add(algorithms, frame, objects);
+
+
+	//currentTrackers.add(algorithms, frame, objects);
 	currentTrackers.update(frame);
 
 	for (unsigned i = 0; i < currentTrackers.getObjects().size(); i++) {
