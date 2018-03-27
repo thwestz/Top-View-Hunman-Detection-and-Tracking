@@ -29,9 +29,10 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 			for (size_t j = 0; j < currentTrackers.getObjects().size(); j++)
 			{
 				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[j];
+				Rect2d totalSize = ROIs[i] | currentTrackers.getObjects()[j];
 				//printf_s("%s %f %s", "OVERLAP", overlap.area(), "\n");
-				if (overlap.area() / 100.00 < 0.80 && overlap.area() != 0) {
-					printf_s("%s %f %s", "OVERLAP", overlap.area() / 100.00, "\n");
+				if ((overlap.area() * 100 ) / totalSize.area() > 20.00) {
+					printf_s("%s %f %s", "OVERLAP", (overlap.area() * 100) / totalSize.area(), "\n");
 					Ptr<Tracker>  newAlgor;
 					newAlgor = createTrackerByName("MIL");
 					//objects.push_back(ROIs[i]);
