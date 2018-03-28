@@ -10,7 +10,11 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	bool isTrain = false;
+
 	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE11.avi";
+
+	//String videoPath = "D:/ProjectCCTV.avi";
+
 
 	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
 

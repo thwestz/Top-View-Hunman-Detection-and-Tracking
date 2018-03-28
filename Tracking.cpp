@@ -32,9 +32,9 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 
 				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[j];
 				Rect2d totalSize = ROIs[i] | currentTrackers.getObjects()[j];
-
 				if (((overlap.area() * 100.00) / totalSize.area() > 10.00)) {
 					newTrackList.push_back(i);
+
 					break;
 				}
 

@@ -143,7 +143,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	//	imshow("Diff", diff_im);
 		imshow("bw", bw);
 		imshow("newPoint", newPoint);
-	//	currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
 		i++;
 		newPointList.clear();
 		reversePoint.clear();
