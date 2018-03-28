@@ -3,15 +3,6 @@
 #include "Tracking.h"
 void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 {
-
-	/*Mat camera_matrix = Mat(3, 3, CV_32FC1);
-	Mat newCamMat = Mat(3, 3, CV_32FC1);
-	Mat distCoeffs;
-	FileStorage fs("D:/Senior_Project/out_camera_data_40.xml", FileStorage::READ);
-	fs["camera_matrix"] >> camera_matrix;
-	fs["distortion_coefficients"] >> distCoeffs;
-	fs.release();*/
-
 	vector < Ptr<Tracker>> algorithms;
 	vector<Rect2d> objects;
 	MultiTracker currentTrack;
@@ -22,7 +13,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	double th = 50;
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
-	//stream1.set(CAP_PROP_POS_FRAMES, 600);
+	stream1.set(CAP_PROP_POS_FRAMES, 900);
 	int i = 1;
 	int k = 0;
 	while (1)
@@ -35,7 +26,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 		stream1 >> image;
 		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
-		resize(image, image, Size(1024, 576));
+		//resize(image, image, Size(1024, 576));
 		//undistort(test, image, camera_matrix, distCoeffs);*/
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
@@ -47,8 +38,8 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		if (i == 1)
 		{
 			first_frame = image;
-			bg_im = first_frame;
-			//bg_im = imread("D:/Project/Resource/bg.jpg");
+			//bg_im = first_frame;
+			bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg.jpg");
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
 			GaussianBlur(bg_im_gray, bg_im_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		}
@@ -62,7 +53,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		Mat SE(5, 5, CV_8U, Scalar(1));
 
 		Mat cleaned_im;
-		//morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
+		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
 		Mat diff_new, bw_new;
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
@@ -96,10 +87,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			if (areas[i] > 1000)
 			{
 
-				tlx_o = bb.tl().x - 25;
-				tly_o = bb.tl().y - 25;
-				brx_o = bb.br().x + 25;
-				bry_o = bb.br().y + 25;
+				tlx_o = bb.tl().x - 20;
+				tly_o = bb.tl().y - 20;
+				brx_o = bb.br().x + 20;
+				bry_o = bb.br().y + 20;
 				rectangle(image, bb, Scalar(0, 255, 0), 2);
 				if (tlx_o <= 0) {
 					tlx_o = 0;
@@ -133,13 +124,12 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 						int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
 
 						newPointList.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
-						newPointListToTrack.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
+						newPointListToTrack.push_back(Rect2d(Point(tlx, tly ), Point(brx, bry)));
 					}
 
 					for (size_t z = 0; z < newPointList.size(); z++) {
 						rectangle(newPoint, newPointList[z], Scalar(255, 0, 0), 2);
 						for (size_t t = 0; t < newPointListToTrack.size(); t++) {
-
 						}
 					}
 
@@ -149,11 +139,11 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 		}
 
-		imshow("Image", image);
-		imshow("Diff", diff_im);
+	//	imshow("Image", image);
+	//	imshow("Diff", diff_im);
 		imshow("bw", bw);
 		imshow("newPoint", newPoint);
-		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+	//	currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
 		i++;
 		newPointList.clear();
 		reversePoint.clear();
