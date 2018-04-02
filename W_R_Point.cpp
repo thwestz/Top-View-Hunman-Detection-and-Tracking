@@ -43,8 +43,8 @@ int main()
 	RNG rng;
 	rng(getTickCount());
 
-	glob("D:/Project_Oriental/Test train HOG -1/FishEye/dataset_image", pos_files);
-	glob("D:/Project_Oriental/Test train HOG -1/FishEye/dataset_point", point_files);
+	glob("D:/Senior_Project/Dataset/Floor18/HEAD1/pic", pos_files);
+	glob("D:/Senior_Project/Dataset/Floor18/HEAD1/point", point_files);
 
 	int k;
 	k = 0;
@@ -87,7 +87,7 @@ int main()
 				//imshow("Crop", crop);
 				//clog << startPoint << endPoint << endl;
 				resize(crop, crop,Size(64,64));
-				imwrite("D:/Project_Oriental/Test train HOG -1/FishEye/Crop/images_" + to_string(count) + ".jpg", crop);
+				imwrite("D:/Senior_Project/Dataset/Floor18/HEAD1/Crop/images_" + to_string(count) + ".jpg", crop);
 
 				bool jitter = false;
 				if (jitter) {

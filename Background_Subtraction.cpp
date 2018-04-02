@@ -13,9 +13,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	double th = 50;
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
-	stream1.set(CAP_PROP_POS_FRAMES, 900);
+	stream1.set(CAP_PROP_POS_FRAMES, 100);
 	int i = 1;
 	int k = 0;
+	Mat path;
 	while (1)
 	{
 		Mat image, test;
@@ -26,7 +27,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 		stream1 >> image;
 		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
-		//resize(image, image, Size(1024, 576));
+		//resize(image, image, Size(image.cols * 1.75, image.rows * 1.75));
 		//undistort(test, image, camera_matrix, distCoeffs);*/
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
@@ -39,12 +40,14 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		{
 			first_frame = image;
 			//bg_im = first_frame;
-			bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg.jpg");
+			bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_2.jpg");
+			path = bg_im.clone();
+			//resize(bg_im, bg_im, Size(bg_im.cols * 1.75, bg_im.rows * 1.75));
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
-			GaussianBlur(bg_im_gray, bg_im_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
+			//GaussianBlur(bg_im_gray, bg_im_gray, Size(3,3), 0, 0, BORDER_DEFAULT);
 		}
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
-		GaussianBlur(image_gray, image_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
+		//GaussianBlur(image_gray, image_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		threshold(diff_im, bw, th, 255, THRESH_BINARY);
 		cv::Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
@@ -84,7 +87,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			int brx_o = 0;
 			int bry_o = 0;
 
-			if (areas[i] > 1000)
+			if (areas[i] > 1500)
 			{
 
 				tlx_o = bb.tl().x - 20;
@@ -139,15 +142,24 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 
 		}
 
-	//	imshow("Image", image);
-	//	imshow("Diff", diff_im);
-		imshow("bw", bw);
+		imshow("Image", image);
+		//imshow("Diff", diff_im);
+		//imshow("bw", bw);
 		imshow("newPoint", newPoint);
-		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		//imwrite("D:/Senior_Project/ImageDetected/image2042018_" + to_string(i) + ".jpg",newPoint);
+		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		//for (int m = 0; m < currentTrack.getObjects().size(); m++) {
+		//	Point center_of_rect = (currentTrack.getObjects()[m].br() + currentTrack.getObjects()[m].tl())*0.5;
+		//	circle(path, center_of_rect, 1, Scalar(0, 0, 255),2);
+		//}
+		//imshow("path", path);
 		i++;
+		/*if (i == 40) {
+			imshow("path", path);
+			waitKey(0);
+		}*/
 		newPointList.clear();
 		reversePoint.clear();
-
 		if (waitKey(20) >= 0)
 			break;
 	}

@@ -127,9 +127,26 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	double t = (double)getTickCount();
 
 
-	hog.detectMultiScale(img, found, 0, Size(8, 8), Size(0, 0), 1.25);
+	//hog.detectMultiScale(img, found, foundWeights, 0, Size(4,4), Size(0, 0),1.25);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.03);
+	for (size_t j = 0; j < detections.size(); j++)
+	{
+		//printf_s("%f %s", foundWeights[j],"\n");
+		if (foundWeights[j] < 1.0) {
+			continue;
+		}
+		Rect point(detections[j].tl(), detections[j].br());
+		Scalar color = Scalar(0, foundWeights[j] * foundWeights[j] * 200, 0);
+		predicted.push_back(point);
+		rectangle(img, detections[j], color, img.cols / 400 + 1);
+		//imshow("", img);
+		//waitKey(0);
+	}
 
-	if (found.size() != 0) {
+
+	/*if (found.size() == 0) {
+		return predicted;
+	}else {
 
 
 		for (size_t i = 0; i < found.size(); i++)
@@ -154,19 +171,16 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 			r.y += cvRound(r.height*0.07);
 			r.height = cvRound(r.height*0.8);
 			Rect point(r.tl(), r.br());
-			if (doHardNegative) {
+			/*if (doHardNegative) {
 				Mat crop = cleanImg(point);
 				resize(crop, crop, Size(64, 64));
 				imwrite("D:/hard_negative/image_2_"
 
 					+ to_string(counter) + ".jpg", crop);
 				counter++;
-			}
-			predicted.push_back(point);
-		}
-	}
-	else {
-		return predicted;
-	}
+			}*/
+			//predicted.push_back(point);
+		
+	
 	return predicted;
 }

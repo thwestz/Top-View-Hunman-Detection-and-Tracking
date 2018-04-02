@@ -12,7 +12,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	Mat originFrame = frame.clone();
 	Mat visualStep = frame.clone();
 	Point centerPosition;
-
+	Mat path;
 	//first time to add object
 	if (currentTrackers.getObjects().size() == 0) {
 		for (size_t i = 0; i < ROIs.size(); i++)
@@ -20,6 +20,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 			algorithms.push_back(createTrackerByName("MIL"));
 			//Rect2d resizeROI(Point(ROIs[i].tl().x + 30, ROIs[i].tl().y + 30),Point(ROIs[i].br().x + 30 , ROIs[i].br().y + 30));
 			objects.push_back(ROIs[i]);
+
 			continue;
 		}
 		currentTrackers.add(algorithms, frame, objects);
@@ -32,7 +33,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 
 				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[j];
 				Rect2d totalSize = ROIs[i] | currentTrackers.getObjects()[j];
-				if (((overlap.area() * 100.00) / totalSize.area() > 10.00)) {
+				if (((overlap.area() * 100.00) / totalSize.area() > 5.00)) {
 					newTrackList.push_back(i);
 
 					break;
@@ -65,11 +66,17 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	currentTrackers.update(frame);
 
 	for (unsigned i = 0; i < currentTrackers.getObjects().size(); i++) {
+		//Point center_of_rect = (currentTrackers.getObjects()[i].br() + currentTrackers.getObjects()[i].tl())*0.5;
+	
 		rectangle(frame, currentTrackers.getObjects()[i], Scalar(255, 0, 0), 2, 1);
+
+		//circle(path, center_of_rect, 3, Scalar(0, 0, 255));
+	
 		//circle(frame, temptrackers.getObjects[i], 3, Scalar(0, 255, 0), -1);
 	}
 	//resize(frame, frame, Size(frame.cols / 3, frame.rows / 3));
 	imshow("tracker", frame);
+//	imshow("path", path);
 	//waitKey(0);
 	return currentTrackers;
 
