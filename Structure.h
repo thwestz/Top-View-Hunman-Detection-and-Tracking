@@ -11,7 +11,11 @@ using namespace cv;
 using namespace std;
 class Structure {
 public:
-		vector<int> tracking_id(int tracking_id);
-		vector<Rect2d> checkROIs(vector<Rect2d> ROIs);
-		String status(MultiTracker currentTracker, String status);
+	void setTracking_id(int id);
+	int	 getTracking_id();
+	void setStatus(String status);
+	String getStatus();
+private :
+	int tracking_id;
+	String tracking_status;
 };

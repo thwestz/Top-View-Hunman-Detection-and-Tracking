@@ -1,13 +1,18 @@
 #include "Structure.h"
 
-vector<int> Structure::tracking_id(int tracking_id) {
+void Structure::setTracking_id(int id) {
+	tracking_id = id;
 
 }
 
-vector<Rect2d> Structure::checkROIs(vector<Rect2d> ROIs) {
-
+int Structure::getTracking_id() {
+	return tracking_id;
 }
-String Structure::status(MultiTracker currentTracker, String status);
-{
 
+void Structure::setStatus(String status) {
+	tracking_status = status;
+}
+
+String Structure::getStatus() {
+	return tracking_status;
 }

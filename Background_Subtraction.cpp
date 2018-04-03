@@ -39,8 +39,8 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		if (i == 1)
 		{
 			first_frame = image;
-			//bg_im = first_frame;
-			bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_2.jpg");
+			bg_im = first_frame;
+			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg_2.jpg");
 			path = bg_im.clone();
 			//resize(bg_im, bg_im, Size(bg_im.cols * 1.75, bg_im.rows * 1.75));
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
@@ -147,7 +147,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		//imshow("bw", bw);
 		imshow("newPoint", newPoint);
 		//imwrite("D:/Senior_Project/ImageDetected/image2042018_" + to_string(i) + ".jpg",newPoint);
-		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
 		//for (int m = 0; m < currentTrack.getObjects().size(); m++) {
 		//	Point center_of_rect = (currentTrack.getObjects()[m].br() + currentTrack.getObjects()[m].tl())*0.5;
 		//	circle(path, center_of_rect, 1, Scalar(0, 0, 255),2);
