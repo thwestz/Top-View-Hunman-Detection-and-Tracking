@@ -21,8 +21,8 @@ int main(int argc, char** argv)
 	//String videoPath = "E:/20180326/2.avi";
 
 	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
-	//String svmPath = "D:/Senior_Project/head/2042018.xml";
-	String svmPath = "D:/my_detector_hn_4.yml";
+	String svmPath = "D:/Senior_Project/head/2042018.xml";
+	//String svmPath = "D:/my_detector_hn_4.yml";
 
 
 

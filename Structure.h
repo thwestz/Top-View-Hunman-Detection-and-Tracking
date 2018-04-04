@@ -11,11 +11,11 @@ using namespace cv;
 using namespace std;
 class Structure {
 public:
-	void setTracking_id(int id);
-	int	 getTracking_id();
+	void setTracking_id(int element,size_t total_rois,int id);
+	vector<int>	 getTracking_id();
 	void setStatus(String status);
 	String getStatus();
 private :
-	int tracking_id;
+	vector<int> tracking_id;
 	String tracking_status;
 };
