@@ -19,4 +19,5 @@ public:
 	void sample_neg(const vector< Mat > & full_neg_lst, vector< Mat > & neg_lst, const Size & size);
 	void computeHOGs(const Size wsize, const vector< Mat > & img_lst, vector< Mat > & gradient_lst, bool use_flip);
 	vector<Rect> test_trained_detector(String obj_det_filename, Mat ROI, bool doHardNegative, int & counter);
+	int TrainHOG_SVM(String pos_dir, String neg_dir, String test_dir, String obj_det_filename);
 };

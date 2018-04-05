@@ -128,7 +128,7 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 
 
 	//hog.detectMultiScale(img, found, foundWeights, 0, Size(4,4), Size(0, 0),1.25);
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.03);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.02);
 	for (size_t j = 0; j < detections.size(); j++)
 	{
 		//printf_s("%f %s", foundWeights[j],"\n");
@@ -139,6 +139,12 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 		Scalar color = Scalar(0, foundWeights[j] * foundWeights[j] * 200, 0);
 		predicted.push_back(point);
 		rectangle(img, detections[j], color, img.cols / 400 + 1);
+		if (doHardNegative) {
+		Mat crop = cleanImg(point);
+		resize(crop, crop, Size(36, 36));
+		imwrite("D:/hard_negative/image__"	+ to_string(counter) + ".jpg", crop);
+		counter++;
+		}
 		//imshow("", img);
 		//waitKey(0);
 	}
@@ -183,4 +189,153 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 		
 	
 	return predicted;
+}
+
+int HOG_SVM::TrainHOG_SVM(String pos_dir,String neg_dir , String test_dir ,String obj_det_filename)
+{
+	String videofilename = "";
+	int detector_width = 36;
+	int detector_height = 36;
+	bool test_detector = false;
+	bool train_twice = false;
+	bool visualization = false;
+	bool flip_samples = true;
+
+
+
+	vector< Mat > pos_lst, full_neg_lst, neg_lst, gradient_lst;
+	vector< int > labels;
+
+	clog << "Positive images are being loaded...";
+	load_images(pos_dir, pos_lst, visualization);
+	if (pos_lst.size() > 0)
+	{
+		clog << "...[done]" << endl;
+	}
+	else
+	{
+		clog << "no image in " << pos_dir << endl;
+		return 1;
+	}
+
+	Size pos_image_size = pos_lst[0].size();
+
+	if (detector_width && detector_height)
+	{
+		pos_image_size = Size(detector_width, detector_height);
+	}
+	else
+	{
+		for (size_t i = 0; i < pos_lst.size(); ++i)
+		{
+			if (pos_lst[i].size() != pos_image_size)
+			{
+				cout << "All positive images should be same size!" << endl;
+				exit(1);
+			}
+		}
+		pos_image_size = pos_image_size / 8 * 8;
+	}
+
+	clog << "Negative images are being loaded...";
+	load_images(neg_dir, full_neg_lst, false);
+	sample_neg(full_neg_lst, neg_lst, pos_image_size);
+	clog << "...[done]" << endl;
+
+	clog << "Histogram of Gradients are being calculated for positive images...";
+	computeHOGs(pos_image_size, pos_lst, gradient_lst, flip_samples);
+	size_t positive_count = gradient_lst.size();
+	labels.assign(positive_count, +1);
+	clog << "...[done] ( positive count : " << positive_count << " )" << endl;
+
+	clog << "Histogram of Gradients are being calculated for negative images...";
+	computeHOGs(pos_image_size, neg_lst, gradient_lst, flip_samples);
+	size_t negative_count = gradient_lst.size() - positive_count;
+	labels.insert(labels.end(), negative_count, -1);
+	CV_Assert(positive_count < labels.size());
+	clog << "...[done] ( negative count : " << negative_count << " )" << endl;
+
+	Mat train_data;
+	convert_to_ml(gradient_lst, train_data);
+
+	clog << "Training SVM...";
+	Ptr< SVM > svm = SVM::create();
+
+	/* Default values to train SVM */
+	svm->setCoef0(0.0);
+	svm->setDegree(3);
+	svm->setTermCriteria(TermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 1000, 1e-6));
+	svm->setGamma(0.000000001);
+	svm->setKernel(SVM::LINEAR);
+	svm->setNu(0.5);
+	svm->setP(0.1); // for EPSILON_SVR, epsilon in loss function?
+	svm->setC(0.01); // From paper, soft classifier
+	svm->setType(SVM::NU_SVC); // C_SVC; // EPSILON_SVR; // may be also NU_SVR; // do regression task
+	Ptr<TrainData> td = TrainData::create(train_data, ROW_SAMPLE, labels);
+	svm->trainAuto(td);
+	clog << "...[done]" << endl;
+
+	if (train_twice)
+	{
+		clog << "Testing trained detector on negative images. This may take a few minutes...";
+		HOGDescriptor my_hog(Size(36,36), Size(8, 8), Size(8, 8), Size(4, 4), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, false, HOGDescriptor::DEFAULT_NLEVELS, false);
+
+		my_hog.setSVMDetector(get_svm_detector(svm));
+
+		vector< Rect > detections;
+		vector< double > foundWeights;
+
+		for (size_t i = 0; i < full_neg_lst.size(); i++)
+		{
+			if (full_neg_lst[i].cols >= pos_image_size.width && full_neg_lst[i].rows >= pos_image_size.height)
+				my_hog.detectMultiScale(full_neg_lst[i], detections, foundWeights);
+			else
+				detections.clear();
+
+			for (size_t j = 0; j < detections.size(); j++)
+			{
+				Mat detection = full_neg_lst[i](detections[j]).clone();
+				resize(detection, detection, pos_image_size, 0, 0, INTER_LINEAR);
+				neg_lst.push_back(detection);
+			}
+
+			if (visualization)
+			{
+				for (size_t j = 0; j < detections.size(); j++)
+				{
+					rectangle(full_neg_lst[i], detections[j], Scalar(0, 255, 0), 2);
+				}
+				imshow("testing trained detector on negative images", full_neg_lst[i]);
+				waitKey(5);
+			}
+		}
+		clog << "...[done]" << endl;
+
+		gradient_lst.clear();
+		clog << "Histogram of Gradients are being calculated for positive images...";
+		computeHOGs(pos_image_size, pos_lst, gradient_lst, flip_samples);
+		positive_count = gradient_lst.size();
+		clog << "...[done] ( positive count : " << positive_count << " )" << endl;
+
+		clog << "Histogram of Gradients are being calculated for negative images...";
+		computeHOGs(pos_image_size, neg_lst, gradient_lst, flip_samples);
+		negative_count = gradient_lst.size() - positive_count;
+		clog << "...[done] ( negative count : " << negative_count << " )" << endl;
+
+		labels.clear();
+		labels.assign(positive_count, +1);
+		labels.insert(labels.end(), negative_count, -1);
+
+		clog << "Training SVM again...";
+		convert_to_ml(gradient_lst, train_data);
+		svm->train(train_data, ROW_SAMPLE, labels);
+		clog << "...[done]" << endl;
+	}
+
+	HOGDescriptor hog(Size(36, 36), Size(8, 8), Size(8, 8), Size(4, 4), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, false, HOGDescriptor::DEFAULT_NLEVELS, false);
+
+	hog.setSVMDetector(get_svm_detector(svm));
+	hog.save(obj_det_filename);
+
+	return 0;
 }
