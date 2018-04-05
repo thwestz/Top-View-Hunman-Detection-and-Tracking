@@ -21,7 +21,11 @@ int main(int argc, char** argv)
 	String videoPath = "E:/20180326/35.avi";
 
 	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
+<<<<<<< HEAD
 	String svmPath = "D:/Senior_Project/head/04042018-1.xml";
+=======
+	String svmPath = "D:/Senior_Project/head/2042018.xml";
+>>>>>>> 6c9fe7326784102b04c5b84bf595c6b8f9143fb4
 	//String svmPath = "D:/my_detector_hn_4.yml";
 
 
