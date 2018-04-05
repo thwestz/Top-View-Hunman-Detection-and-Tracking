@@ -1,12 +1,21 @@
 #include "Structure.h"
 
-void Structure::setTracking_id(int element,size_t total_rois, int id) {
-	for (size_t i = element; i < total_rois; i++)
+void Structure::setTracking_id(size_t element, unsigned total_rois, int id) {
+	for (unsigned i = element; i < total_rois; i++)
 	{
-		tracking_id[i] = id;
+		tracking_id.push_back(id);
 	}
 }
+/*
+Class Track{
+id;
+status;
+timestamp;
+}
 
+track.id;
+
+*/
 vector<int> Structure::getTracking_id() {
 	return tracking_id;
 }

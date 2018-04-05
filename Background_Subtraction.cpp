@@ -1,6 +1,8 @@
 #include "BGSubtraction.h"
 #include "HOG_SVM.h"
 #include "Tracking.h"
+#include "trackStructure.h"
+
 void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 {
 	vector < Ptr<Tracker>> algorithms;
@@ -17,6 +19,8 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 	int i = 1;
 	int k = 0;
 	Mat path;
+	vector<trackStructure> trackManage;
+
 	while (1)
 	{
 		Mat image, test;
@@ -119,7 +123,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 					continue;
 				}
 				else {
-					for (size_t x = 0; x < predicted.size(); x++) {
+					for (int x = 0; x < predicted.size(); x++) {
 						int tlx = pointCrop.tl().x + predicted[x].tl().x;
 						int tly = pointCrop.tl().y + predicted[x].tl().y;
 
@@ -130,9 +134,9 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 						newPointListToTrack.push_back(Rect2d(Point(tlx, tly ), Point(brx, bry)));
 					}
 
-					for (size_t z = 0; z < newPointList.size(); z++) {
+					for (int z = 0; z < newPointList.size(); z++) {
 						rectangle(newPoint, newPointList[z], Scalar(255, 0, 0), 2);
-						for (size_t t = 0; t < newPointListToTrack.size(); t++) {
+						for (int t = 0; t < newPointListToTrack.size(); t++) {
 						}
 					}
 
@@ -141,13 +145,12 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			}
 
 		}
-
 		imshow("Image", image);
 		//imshow("Diff", diff_im);
 		imshow("bw", bw);
 		imshow("newPoint", newPoint);
 		//imwrite("E:/evaluate/39/image2042018_" + to_string(i) + ".jpg",newPoint);
-		//currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack);
+		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack,trackManage,i);
 		//for (int m = 0; m < currentTrack.getObjects().size(); m++) {
 		//	Point center_of_rect = (currentTrack.getObjects()[m].br() + currentTrack.getObjects()[m].tl())*0.5;
 		//	circle(path, center_of_rect, 1, Scalar(0, 0, 255),2);

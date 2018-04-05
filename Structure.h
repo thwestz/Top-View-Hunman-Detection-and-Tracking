@@ -11,7 +11,7 @@ using namespace cv;
 using namespace std;
 class Structure {
 public:
-	void setTracking_id(int element,size_t total_rois,int id);
+	void setTracking_id(size_t element,unsigned total_rois,int id);
 	vector<int>	 getTracking_id();
 	void setStatus(String status);
 	String getStatus();
