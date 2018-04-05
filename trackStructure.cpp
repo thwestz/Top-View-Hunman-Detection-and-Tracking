@@ -23,12 +23,12 @@ int trackStructure::getStatus()
 
 void trackStructure::setROI(Rect2d ROI)
 {
-	ROI = ROI;
+	track_ROI = ROI;
 }
 
 Rect2d trackStructure::getROI()
 {
-	return ROI;
+	return track_ROI;
 }
 
 void trackStructure::setFirstFrame(int frame)

@@ -29,7 +29,7 @@ public:
 private: 
 	size_t track_id;
 	int track_status;
-	Rect2d ROI;
+	Rect2d track_ROI;
 	int firstFrame;
 	vector<Point> centerPoint;
 

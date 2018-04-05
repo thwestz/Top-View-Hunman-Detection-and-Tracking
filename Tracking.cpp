@@ -43,7 +43,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	}
 
 
-	for (int z = 0; z < ROIs.size(); z++) {
+	for (int z = 1; z < ROIs.size(); z++) {
 		bool flag = false;
 		for (int x = 0; x < newTrackList.size(); x++) {
 
@@ -67,29 +67,22 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	for (unsigned i = 0; i < currentTrackers.getObjects().size(); i++) {
 		Point center_of_rect = (currentTrackers.getObjects()[i].br() + currentTrackers.getObjects()[i].tl())*0.5;
 		trackStructure newTrack;
-		newTrack.setTrackID(i);
+		newTrack.setTrackID(i+1);
 		newTrack.setROI(currentTrackers.getObjects()[i]);
 		newTrack.setStatus(1);
-		int s = newTrack.getStatus();
-		printf_s("%d", s);
+		//int s = newTrack.getStatus();
+		//printf_s("%d", s);
 		newTrack.setFirstFrame(currentFrame);
 		newTrack.addCenterPoint(center_of_rect);
 		trackManage.push_back(newTrack);
-		printf_s("%d",newTrack.getStatus());
-		//rectangle(frame, currentTrackers.getObjects()[i], Scalar(255, 0, 0), 2, 1);
+		printf_s("%d", newTrack.getTrackID());
+		rectangle(frame, currentTrackers.getObjects()[i], Scalar(255, 0, 0), 2, 1);
 		//printf_s("%d ",structure.getTracking_id());
-		//putText(frame, "id: " + structure.getTracking_id()[i], currentTrackers.getObjects()[i].tl(), 1, 2, Scalar(255, 0, 255), 2);
+		putText(frame, "id:" + to_string(newTrack.getTrackID()), currentTrackers.getObjects()[i].tl(), 1, 2, Scalar(255, 0, 255), 2);
 		//circle(path, center_of_rect, 3, Scalar(0, 0, 255));
 	
 		//circle(frame, temptrackers.getObjects[i], 3, Scalar(0, 255, 0), -1);
 	}
-
-
-	for (int i = 0; i < trackManage.size(); i++) {
-		rectangle(frame, trackManage[i].getROI(), Scalar(255, 0, 0), 2, 1);
-		putText(frame, "id: " + trackManage[i].getTrackID(), trackManage[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
-	}
-
 
 	//resize(frame, frame, Size(frame.cols / 3, frame.rows / 3));
 	imshow("tracker", frame);
