@@ -25,13 +25,15 @@ public:
 	void addCenterPoint(Point point);
 	Point getCenterPoint(int index);
 	void removeCenterPoint(int index);
-
+	void setCntFrame(int cnt_frame);
+	int getCntFrame();
 private: 
 	size_t track_id;
 	int track_status;
 	Rect2d track_ROI;
 	int firstFrame;
 	vector<Point> centerPoint;
+	int trackCntFrame = 0;
 
 };
 #endif
