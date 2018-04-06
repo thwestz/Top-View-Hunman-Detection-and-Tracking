@@ -15,7 +15,8 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 	Mat path;
 	trackStructure newTrack;
 	//first time to add object
-	bool flag = false;
+	bool flag_1 = false;
+	int cnt_frame = 0;
 	if (currentTrackers.getObjects().size() == 0) {
 		for (size_t i = 0; i < ROIs.size(); i++)
 		{
@@ -73,19 +74,18 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 		{
 			if ((currentTrackers.getObjects()[i] & ROIs[j]).area() > 0)
 			{
-				flag = true;
+				flag_1 = true;
 				break;
 			}
 		}
-		if (flag == false) 
+		if (flag_1 == false) 
 		{
-			int cnt_frame = 1;
 			cnt_frame = newTrack.getCntFrame();
 			printf_s("frame %d ", newTrack.getCntFrame());
 			cnt_frame += 1;
 			newTrack.setCntFrame(cnt_frame);
 			printf_s("%d ", newTrack.getCntFrame());
-			if (newTrack.getCntFrame() == 50) {
+			if (cnt_frame == 50) {
 				newTrack.setStatus(0);
 			}
 		}
