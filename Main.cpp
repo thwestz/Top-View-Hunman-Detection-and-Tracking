@@ -9,11 +9,11 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	bool isTrain = false;
+	bool isTrain = true;
 
-	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
+	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
 
-	String videoPath = "D:/ProjectCCTV.avi";
+	//String videoPath = "D:/ProjectCCTV.avi";
 
 
 	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
@@ -32,11 +32,12 @@ int main(int argc, char** argv)
 
 
 	if (isTrain) {
-		String pos_dir = "";
-		String neg_dir = "";
-		String test_dir = "";
-		String obj_det_filename = "";
-		HOGSVM.TrainHOG_SVM(pos_dir,neg_dir, test_dir, obj_det_filename);
+		String pos_dir = "D:/Senior_Project/Dataset/Train";
+		String neg_dir = "D:/Project_Oriental/Test train HOG -1/Negative Resouce";
+		String test_dir = "D:/Senior_Project/head/test";
+		String obj_det_filename = "D:/Senior_Project/head/06042018-1.xml";
+		String videofilename = "";
+		HOGSVM.train_detector(pos_dir,neg_dir, test_dir, obj_det_filename, videofilename);
 		BGSubtractionHeader.BackgroundSubtraction(videoPath, svmPath);
 	}
 	else {
