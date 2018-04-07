@@ -56,3 +56,13 @@ void trackStructure::removeCenterPoint(int index)
 	centerPoint.erase(centerPoint.begin() + index);
 }
 
+void trackStructure::setCntFrame(int cnt_frame) 
+{
+	trackCntFrame = cnt_frame;
+}
+
+int trackStructure::getCntFrame()
+{
+	return trackCntFrame;
+}
+
