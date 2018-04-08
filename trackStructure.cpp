@@ -1,12 +1,12 @@
 #include "trackStructure.h"
 
 
-void trackStructure::setTrackID(size_t id)
+void trackStructure::setTrackID(int id)
 {
 	track_id = id;
 }
 
-size_t trackStructure::getTrackID()
+int trackStructure::getTrackID()
 {
 	return track_id;
 }
@@ -41,20 +41,16 @@ int trackStructure::getFirstFrame()
 	return firstFrame;
 }
 
-void trackStructure::addCenterPoint(Point point)
+void trackStructure::setCenterPoint(Point point)
 {
-	centerPoint.push_back(point);
+	track_centerPoint =point;
 }
 
-Point trackStructure::getCenterPoint(int index)
+Point trackStructure::getCenterPoint()
 {
-	return centerPoint[index];
+	return track_centerPoint;
 }
 
-void trackStructure::removeCenterPoint(int index)
-{
-	centerPoint.erase(centerPoint.begin() + index);
-}
 
 void trackStructure::setCntFrame(int cnt_frame) 
 {

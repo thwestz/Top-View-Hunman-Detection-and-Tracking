@@ -2,12 +2,15 @@
 #include "HOG_SVM.h"
 #include "Tracking.h"
 #include "trackStructure.h"
-
+#include "reportTracking.h"
+#include <algorithm>
 void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 {
 	vector < Ptr<Tracker>> algorithms;
 	vector<Rect2d> objects;
 	MultiTracker currentTrack;
+	vector<trackStructure> currentTrackStruture;
+	vector<reportTracking> pathList;
 	int counter = 0;
 	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame;
 	Mat showResultDetection;
@@ -36,7 +39,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		Mat newPoint = image.clone();
 		Mat toTrackimg;
 		resize(newPoint, toTrackimg, Size(newPoint.cols, newPoint.rows));
-
+		Mat trackImg = image.clone();
 		Mat o_image = image.clone();
 
 
@@ -44,8 +47,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		{
 			first_frame = image;
 			bg_im = first_frame;
+			path = first_frame.clone();
 			//bg_im = imread("E:/New folder/images_4_20.jpg");
 			path = bg_im.clone();
+			
 			//resize(bg_im, bg_im, Size(bg_im.cols * 1.75, bg_im.rows * 1.75));
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
 			//GaussianBlur(bg_im_gray, bg_im_gray, Size(3,3), 0, 0, BORDER_DEFAULT);
@@ -145,27 +150,59 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			}
 
 		}
-		imshow("Image", image);
+		//imshow("Image", image);
 		//imshow("Diff", diff_im);
-		imshow("bw", bw);
+		//imshow("bw", bw);
 		imshow("newPoint", newPoint);
-		//imwrite("E:/evaluate/39/image2042018_" + to_string(i) + ".jpg",newPoint);
-		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack,trackManage,i);
-		//for (int m = 0; m < currentTrack.getObjects().size(); m++) {
-		//	Point center_of_rect = (currentTrack.getObjects()[m].br() + currentTrack.getObjects()[m].tl())*0.5;
-		//	circle(path, center_of_rect, 1, Scalar(0, 0, 255),2);
-		//}
-		//imshow("path", path);
+		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack,i);
+		currentTrackStruture = tracking.initalID(toTrackimg,currentTrack, i);
 		i++;
-		/*if (i == 40) {
-			imshow("path", path);
-			waitKey(0);
-		}*/
+		for (int k = 0; k < currentTrackStruture.size(); k++) {
+			if (pathList.size() > 0) {
+				for (int i = 0; i < pathList.size(); i++) {
+					
+					if (currentTrackStruture[k].getTrackID() == pathList[i].getID()) {
+						pathList[i].addPath(currentTrackStruture[k].getCenterPoint());
+						break;
+					}
+					
+					if(currentTrackStruture[k].getTrackID() != pathList[i].getID() && 
+						currentTrackStruture[k].getTrackID() > pathList.size()){
+						reportTracking reporter;
+					
+						reporter.setID(currentTrackStruture[k].getTrackID());
+						reporter.addPath(currentTrackStruture[k].getCenterPoint());
+						pathList.push_back(reporter);
+						break;
+					}
+				}
+
+			}
+			else {
+				reportTracking reporter;
+				
+				reporter.setID(currentTrackStruture[k].getTrackID());
+				reporter.addPath(currentTrackStruture[k].getCenterPoint());
+				pathList.push_back(reporter);
+			}
+		}
+		if (i == 50) {
+			for (int i = 0; i < pathList.size(); i++) {
+				for (int j = 0; j < pathList[i].getPath().size(); j++) {
+					circle(path, pathList[i].getPath()[j], 3,Scalar(i * 10, 255, 0),-1);
+					
+				}
+
+			}
+			imshow("asdww", path);
+				waitKey(0);
+		}
 		newPointList.clear();
 		reversePoint.clear();
 		if (waitKey(20) >= 0)
 			break;
 	}
 	destroyAllWindows();
+	
 	
 }

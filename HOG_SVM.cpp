@@ -315,7 +315,7 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	double t = (double)getTickCount();
 
 
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.02);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.03);
 		for (size_t j = 0; j < detections.size(); j++)
 		{
 			if (foundWeights[j] < 1.0) {
@@ -324,7 +324,7 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 			Rect point(detections[j].tl(), detections[j].br());
 			Scalar color = Scalar(0, foundWeights[j] * foundWeights[j] * 200, 0);
 			predicted.push_back(point);
-			rectangle(img, detections[j], color, img.cols / 400 + 1);
+			//rectangle(img, detections[j], color, img.cols / 400 + 1);
 			/*if (doHardNegative) {
 				Mat crop = cleanImg(point);
 				resize(crop, crop, Size(36, 36));
@@ -333,7 +333,7 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 			}*/
 		}
 
-		imshow(obj_det_filename, img);
+		//imshow(obj_det_filename, img);
 		return predicted;
 }
 

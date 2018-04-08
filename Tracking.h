@@ -10,7 +10,6 @@ class Tracking {
 public:
 
 
-	MultiTracker tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers,vector<trackStructure> trackManage,int currentFrame);
-
-
+	MultiTracker tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers,int currentFrame);
+	vector<trackStructure> initalID(Mat toTrackimg, MultiTracker currentTrackers, int currentFrame);
 };

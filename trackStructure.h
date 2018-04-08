@@ -14,25 +14,24 @@ using namespace std;
 class trackStructure
 {
 public:
-	void setTrackID(size_t id);
-	size_t getTrackID();
+	void setTrackID(int id);
+	int getTrackID();
 	void setStatus(int status);
 	int getStatus();
 	void setROI(Rect2d ROI);
 	Rect2d getROI();
 	void setFirstFrame(int frame);
 	int getFirstFrame();
-	void addCenterPoint(Point point);
-	Point getCenterPoint(int index);
-	void removeCenterPoint(int index);
+	void setCenterPoint(Point point);
+	Point getCenterPoint();
 	void setCntFrame(int cnt_frame);
 	int getCntFrame();
 private: 
-	size_t track_id;
+	int track_id;
 	int track_status;
 	Rect2d track_ROI;
 	int firstFrame;
-	vector<Point> centerPoint;
+	Point track_centerPoint;
 	int trackCntFrame = 0;
 
 };
