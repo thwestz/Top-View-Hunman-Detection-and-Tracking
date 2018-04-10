@@ -1,3 +1,5 @@
+#ifndef HOG_SVM_H
+#define HOG_SVM_H
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/ml.hpp"
@@ -21,3 +23,4 @@ public:
 	vector<Rect> test_trained_detector(String obj_det_filename, Mat ROI, bool doHardNegative, int & counter);
 	int train_detector(String pos_dir, String neg_dir, String test_dir, String obj_det_filename, String videofilename);
 };
+#endif

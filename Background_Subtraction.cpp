@@ -1,88 +1,70 @@
 #include "BGSubtraction.h"
-#include "HOG_SVM.h"
-#include "Tracking.h"
-#include "trackStructure.h"
-#include "reportTracking.h"
-#include <algorithm>
-void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
+void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 {
-	vector < Ptr<Tracker>> algorithms;
-	vector<Rect2d> objects;
+	Tracking trackingAPI;
+	HOG_SVM HOG_SVMHeader;
 	MultiTracker currentTrack;
 	vector<trackStructure> currentTrackStruture;
 	vector<reportTracking> pathList;
-	int counter = 0;
-	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame;
-	Mat showResultDetection;
-	Tracking tracking;
+	vector<trackStructure> trackManage;
+	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame, pathImg;
+	Mat image, detectImg, toTrackimg, trackImg, originalImg, diff_new, bw_new, cleaned_im;
+	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7,7));
+	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
+	int cnt_firstFrame = 0, counter = 0;
+
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
-	stream1.set(CAP_PROP_POS_FRAMES, 100);
-	int i = 1;
-	int k = 0;
-	Mat path;
-	vector<trackStructure> trackManage;
-
+	stream1.set(CAP_PROP_POS_FRAMES, 20);
 	while (1)
 	{
-		Mat image, test;
+		vector<Rect2d> reversePoint, newPointList, newPointListToTrack;
+		vector<vector<Point>> contours;
 
 		if (!(stream1.read(image))) {
 			break;
 		}
 
 		stream1 >> image;
-		//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_" + to_string(k) + ".jpg", image);
-		//resize(image, image, Size(image.cols * 1.75, image.rows * 1.75));
-		//undistort(test, image, camera_matrix, distCoeffs);*/
-		Mat newPoint = image.clone();
-		Mat toTrackimg;
-		resize(newPoint, toTrackimg, Size(newPoint.cols, newPoint.rows));
-		Mat trackImg = image.clone();
-		Mat o_image = image.clone();
 
+		detectImg = image.clone();
+		trackImg = image.clone();
+		originalImg = image.clone();
 
-		if (i == 1)
+		resize(detectImg, toTrackimg, Size(detectImg.cols, detectImg.rows));
+
+		if (cnt_firstFrame == 0)
 		{
 			first_frame = image;
 			bg_im = first_frame;
-			path = first_frame.clone();
-			//bg_im = imread("E:/New folder/images_4_20.jpg");
-			path = bg_im.clone();
-			
-			//resize(bg_im, bg_im, Size(bg_im.cols * 1.75, bg_im.rows * 1.75));
+			pathImg = first_frame.clone();
+			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg.jpg");
+			//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_3.jpg", bg_im);
+			pathImg = bg_im.clone();
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
-			//GaussianBlur(bg_im_gray, bg_im_gray, Size(3,3), 0, 0, BORDER_DEFAULT);
+	
 		}
+
+		/// Pre-Image Processing///
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
-		//GaussianBlur(image_gray, image_gray, Size(3, 3), 0, 0, BORDER_DEFAULT);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		cv::Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
-		cv::dilate(bw, bw, structuringElement7x7);
-		cv::dilate(bw, bw, structuringElement7x7);
-		Mat SE(5, 5, CV_8U, Scalar(1));
+		//adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 27, -25);
+		dilate(bw, bw, structuringElement7x7);
+		//dilate(bw, bw, structuringElement7x7);
 
-		Mat cleaned_im;
 		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
-		Mat diff_new, bw_new;
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
-		HOG_SVM HOG_SVMHeader;
-		vector<Rect2d> reversePoint, newPointList, newPointListToTrack;
-		std::vector<std::vector<Point>> contours;
 
+		/// Find Interest Region
 		findContours(bw, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
 
 		vector<double> areas(contours.size());
 		for (int i = 0; i < contours.size(); i++)
 		{
-
 			areas[i] = contourArea(contours[i]);
-
-
-
 			Rect bb = boundingRect(contours[i]);
 			int sx = bb.tl().x;
 			int sy = bb.tl().y;
@@ -91,12 +73,10 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 			int cx = (sx + ex) / 2;
 			int cy = (sy + ey) / 2;
 
-			int tlx_o = 0;
-			int tly_o = 0;
-			int brx_o = 0;
-			int bry_o = 0;
+			int tlx_o = 0,tly_o = 0,brx_o = 0,bry_o = 0;
 
-			if (areas[i] > 1500)
+			/// Controll Size of Region
+			if (areas[i] > 1000)
 			{
 
 				tlx_o = bb.tl().x - 20;
@@ -122,7 +102,9 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 				}
 
 				Rect pointCrop(Point(tlx_o, tly_o), Point(brx_o, bry_o));
-				Mat crop = o_image(pointCrop);
+				Mat crop = originalImg(pointCrop);
+
+				/// HOG-SVM Prediction
 				vector<Rect> predicted = HOG_SVMHeader.test_trained_detector(svmPath, crop, true, counter);
 				if (predicted.size() <= 0) {
 					continue;
@@ -140,9 +122,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 					}
 
 					for (int z = 0; z < newPointList.size(); z++) {
-						rectangle(newPoint, newPointList[z], Scalar(255, 0, 0), 2);
-						for (int t = 0; t < newPointListToTrack.size(); t++) {
-						}
+						rectangle(detectImg, newPointList[z], Scalar(255, 0, 0), 2);
 					}
 
 				}
@@ -153,56 +133,24 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 		//imshow("Image", image);
 		//imshow("Diff", diff_im);
 		//imshow("bw", bw);
-		imshow("newPoint", newPoint);
-		currentTrack = tracking.tracking_API(toTrackimg, newPointListToTrack, currentTrack,i);
-		currentTrackStruture = tracking.initalID(toTrackimg,currentTrack, i);
-		i++;
-		for (int k = 0; k < currentTrackStruture.size(); k++) {
-			if (pathList.size() > 0) {
-				for (int i = 0; i < pathList.size(); i++) {
-					
-					if (currentTrackStruture[k].getTrackID() == pathList[i].getID()) {
-						pathList[i].addPath(currentTrackStruture[k].getCenterPoint());
-						break;
-					}
-					
-					if(currentTrackStruture[k].getTrackID() != pathList[i].getID() && 
-						currentTrackStruture[k].getTrackID() > pathList.size()){
-						reportTracking reporter;
-					
-						reporter.setID(currentTrackStruture[k].getTrackID());
-						reporter.addPath(currentTrackStruture[k].getCenterPoint());
-						pathList.push_back(reporter);
-						break;
-					}
-				}
+		//imshow("HOG-SVM Detector", detectImg);
+		/// Tracking Algorithm
+		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack,cnt_firstFrame);
+		currentTrackStruture = trackingAPI.initalID(toTrackimg,currentTrack, cnt_firstFrame);
 
-			}
-			else {
-				reportTracking reporter;
-				
-				reporter.setID(currentTrackStruture[k].getTrackID());
-				reporter.addPath(currentTrackStruture[k].getCenterPoint());
-				pathList.push_back(reporter);
-			}
-		}
-		if (i == 50) {
-			for (int i = 0; i < pathList.size(); i++) {
-				for (int j = 0; j < pathList[i].getPath().size(); j++) {
-					circle(path, pathList[i].getPath()[j], 3,Scalar(i * 10, 255, 0),-1);
-					
-				}
+		/// Manage Report
+		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
 
-			}
-			imshow("asdww", path);
-				waitKey(0);
-		}
+	  /* if (cnt_firstFrame++ == 50) {
+			trackingAPI.showPath(pathList, pathImg);
+		}*/
+
+		cnt_firstFrame++;
 		newPointList.clear();
 		reversePoint.clear();
 		if (waitKey(20) >= 0)
 			break;
 	}
+	trackingAPI.showPath(pathList, pathImg);
 	destroyAllWindows();
-	
-	
 }

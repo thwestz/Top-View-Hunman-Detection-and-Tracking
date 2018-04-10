@@ -1,14 +1,8 @@
 #include "Tracking.h"
-#include "samples_utility.cpp"
-#include "Math.h"
-#include "trackStructure.h"
 
-
-MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers,int currentFrame) {
-	vector<int> newTrackList;
+MultiTracker Tracking::adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers,int currentFrame) {
+	vector<int> eraseTrackList;
 	vector<Ptr<Tracker> > algorithms;
-	MultiTracker temptrackers;
-	temptrackers = currentTrackers;
 	vector<Rect2d> objects;
 
 	if (currentTrackers.getObjects().size() == 0) {
@@ -25,11 +19,10 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 
 			for (int j = 0; j < currentTrackers.getObjects().size(); j++)
 			{
-
 				Rect2d overlap = ROIs[i] & currentTrackers.getObjects()[j];
 				Rect2d totalSize = ROIs[i] | currentTrackers.getObjects()[j];
 				if (((overlap.area() * 100.00) / totalSize.area() > 5.00)) {
-					newTrackList.push_back(i);
+					eraseTrackList.push_back(i);
 
 					break;
 				}
@@ -41,9 +34,9 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 
 	for (int z = 1; z < ROIs.size(); z++) {
 		bool flag = false;
-		for (int x = 0; x < newTrackList.size(); x++) {
+		for (int x = 0; x < eraseTrackList.size(); x++) {
 
-			if (z == newTrackList[x]) {
+			if (z == eraseTrackList[x]) {
 				flag = true;
 				break;
 			}
@@ -55,7 +48,7 @@ MultiTracker Tracking::tracking_API(Mat frame, vector<Rect2d> ROIs, MultiTracker
 			currentTrackers.add(newAlgor, frame, ROIs[z]);
 		}
 	}
-	newTrackList.clear();
+	eraseTrackList.clear();
 
 	currentTrackers.update(frame);
 
@@ -85,4 +78,53 @@ vector<trackStructure> Tracking::initalID(Mat toTrackimg, MultiTracker currentTr
 
 	return currentTrackStruture;
 
+}
+
+vector<reportTracking> Tracking::manageReport(vector<trackStructure> currentTrackStruture, vector<reportTracking> pathList)
+{
+
+	for (int k = 0; k < currentTrackStruture.size(); k++) {
+		if (pathList.size() > 0) {
+			for (int i = 0; i < pathList.size(); i++) {
+
+				if (currentTrackStruture[k].getTrackID() == pathList[i].getID()) {
+					pathList[i].addPath(currentTrackStruture[k].getCenterPoint());
+					break;
+				}
+
+				if (currentTrackStruture[k].getTrackID() != pathList[i].getID() &&
+					currentTrackStruture[k].getTrackID() > pathList.size()) {
+					reportTracking reporter;
+
+					reporter.setID(currentTrackStruture[k].getTrackID());
+					reporter.addPath(currentTrackStruture[k].getCenterPoint());
+					pathList.push_back(reporter);
+					break;
+				}
+			}
+
+		}
+		else {
+			reportTracking reporter;
+
+			reporter.setID(currentTrackStruture[k].getTrackID());
+			reporter.addPath(currentTrackStruture[k].getCenterPoint());
+			pathList.push_back(reporter);
+		}
+	}
+	return pathList;
+}
+
+void Tracking::showPath(vector<reportTracking> pathList,Mat pathImg)
+{
+	for (int i = 0; i < pathList.size(); i++) {
+
+		for (int j = 0; j < pathList[i].getPath().size(); j++) {
+			circle(pathImg, pathList[i].getPath()[j], 3, Scalar(i * 200, 0, 0), -1);
+
+		}
+
+	}
+	imshow("Path", pathImg);
+	waitKey(0);
 }

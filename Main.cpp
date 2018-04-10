@@ -11,9 +11,10 @@ int main(int argc, char** argv)
 {
 	bool isTrain = false;
 
+
 	String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
 
-	//String videoPath = "D:/ProjectCCTV.avi";
+	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/train/1.avi";
 
 
 	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
@@ -38,12 +39,11 @@ int main(int argc, char** argv)
 		String obj_det_filename = "D:/Senior_Project/head/06042018-1.xml";
 		String videofilename = "";
 		HOGSVM.train_detector(pos_dir,neg_dir, test_dir, obj_det_filename, videofilename);
-		BGSubtractionHeader.BackgroundSubtraction(videoPath, svmPath);
+		BGSubtractionHeader.detectAndTrack(videoPath, svmPath);
 	}
 	else {
 
-
-	BGSubtractionHeader.BackgroundSubtraction(videoPath, svmPath);
+	BGSubtractionHeader.detectAndTrack(videoPath, svmPath);
 	}
 
 	return 0;
