@@ -13,7 +13,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
 	int cnt_firstFrame = 0, counter = 0;
-
+	vector<pair<int, int>> chk_failure_track;
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
 	stream1.set(CAP_PROP_POS_FRAMES, 20);
@@ -133,11 +133,11 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		//imshow("Image", image);
 		//imshow("Diff", diff_im);
 		//imshow("bw", bw);
-		//imshow("HOG-SVM Detector", detectImg);
+		imshow("HOG-SVM Detector", detectImg);
 		/// Tracking Algorithm
 		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack,cnt_firstFrame);
 		currentTrackStruture = trackingAPI.initalID(toTrackimg,currentTrack, cnt_firstFrame);
-
+		chk_failure_track = trackingAPI.cnt_failure_tracking(currentTrack, newPointListToTrack, chk_failure_track);
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
 

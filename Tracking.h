@@ -18,5 +18,6 @@ public:
 	vector<trackStructure> initalID(Mat toTrackimg, MultiTracker currentTrackers, int currentFrame);
 	vector<reportTracking> manageReport(vector<trackStructure> currentTrackStruture, vector<reportTracking> pathList);
 	void showPath(vector<reportTracking> pathList, Mat pathImg);
+	vector<pair<int, int>> cnt_failure_tracking(MultiTracker currentTracker, vector<Rect2d> ROIs, vector<pair<int, int>>chk_failure_track);
 };
 #endif

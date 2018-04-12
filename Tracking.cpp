@@ -128,3 +128,50 @@ void Tracking::showPath(vector<reportTracking> pathList,Mat pathImg)
 	imshow("Path", pathImg);
 	waitKey(0);
 }
+
+vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracker, vector<Rect2d> ROIs, vector<pair<int, int>> vec_chk_track) {
+	pair<int, int> chk_failure_track = make_pair(0,0);
+	bool flag = false;
+	bool no_more_add = false;
+	for (int i = 0; i < currentTracker.getObjects().size(); i++) 
+	{
+		for (int j = 0; j < ROIs.size(); j++) 
+		{
+			if ((currentTracker.getObjects()[i] & ROIs[j]).area() > 0)
+			{
+				flag = true;
+				break;
+			}
+		}
+		if (!flag)
+		{
+			if (vec_chk_track.size() == 0)//first time with out tracking failure data
+			{
+				chk_failure_track = make_pair(i, 1); //make pair with track[i] and cnt when track[i] failure
+				vec_chk_track.push_back(chk_failure_track);
+				printf_s("frame_0 %d cnt %d ", vec_chk_track[i].first, vec_chk_track[i].second);
+				break;
+			}
+			//this part is bugging
+			/*if (i == vec_chk_track[i].first)
+			{
+				vec_chk_track[i].second += 1;
+				no_more_add = true;
+			}
+			else 
+			{
+				if (no_more_add == false)
+				{
+					chk_failure_track = make_pair(i, 1);
+					vec_chk_track.push_back(chk_failure_track);
+				}
+			}*/
+
+		}
+	}
+	for (int i = 0; i < vec_chk_track.size(); i++)
+	{
+		printf_s("track_id %d cnt %d round %d \n", vec_chk_track[i].first, vec_chk_track[i].second, i);
+	}
+	return vec_chk_track;
+}
