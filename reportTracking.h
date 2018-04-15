@@ -20,10 +20,14 @@ public:
 	vector<Point> getPath();
 	void addPath(Point path);
 
+	vector<Rect2d> getPathRect();
+	void addPathRect(Rect2d rect);
+	Rect2d getOnePath(int index);
 
 private :
 
 	int rt_id;
 	vector<Point> pathList;
+	vector<Rect2d> pathRect;
 };
 #endif

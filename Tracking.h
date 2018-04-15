@@ -14,9 +14,10 @@ class Tracking {
 public:
 
 
-	MultiTracker adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers,int currentFrame);
-	vector<trackStructure> initalID(Mat toTrackimg, MultiTracker currentTrackers, int currentFrame);
+	MultiTracker adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTracker currentTrackers, int currentFrame);
+	vector<trackStructure> initalID(MultiTracker currentTrackers, int currentFrame);
 	vector<reportTracking> manageReport(vector<trackStructure> currentTrackStruture, vector<reportTracking> pathList);
 	void showPath(vector<reportTracking> pathList, Mat pathImg);
+	void showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg);
 };
 #endif

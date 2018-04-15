@@ -1,6 +1,7 @@
 #include "BGSubtraction.h"
 void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 {
+	vector<Rect2d> testRect;
 	Tracking trackingAPI;
 	HOG_SVM HOG_SVMHeader;
 	MultiTracker currentTrack;
@@ -12,11 +13,11 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7,7));
 	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
-	int cnt_firstFrame = 0, counter = 0;
+	int cnt_firstFrame = 0, counter = 0,cnt_id = 0;
 
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
-	stream1.set(CAP_PROP_POS_FRAMES, 20);
+	//stream1.set(CAP_PROP_POS_FRAMES, 60);
 	while (1)
 	{
 		vector<Rect2d> reversePoint, newPointList, newPointListToTrack;
@@ -49,8 +50,8 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		/// Pre-Image Processing///
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
 		absdiff(bg_im_gray, image_gray, diff_im);
-		threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		//adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 27, -25);
+		//threshold(diff_im, bw, th, 255, THRESH_BINARY);
+		adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 27, -25);
 		dilate(bw, bw, structuringElement7x7);
 		//dilate(bw, bw, structuringElement7x7);
 
@@ -133,17 +134,18 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		//imshow("Image", image);
 		//imshow("Diff", diff_im);
 		//imshow("bw", bw);
-		//imshow("HOG-SVM Detector", detectImg);
+		imshow("HOG-SVM Detector", detectImg);
 		/// Tracking Algorithm
 		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack,cnt_firstFrame);
-		currentTrackStruture = trackingAPI.initalID(toTrackimg,currentTrack, cnt_firstFrame);
+		currentTrackStruture = trackingAPI.initalID(currentTrack, cnt_firstFrame);
 
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
-
-	  /* if (cnt_firstFrame++ == 50) {
+		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg);
+	  /* if (cnt_firstFrame == 40) {
 			trackingAPI.showPath(pathList, pathImg);
 		}*/
+
 
 		cnt_firstFrame++;
 		newPointList.clear();
