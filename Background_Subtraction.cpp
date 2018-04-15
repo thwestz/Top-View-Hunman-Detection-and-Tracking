@@ -14,6 +14,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
 	int cnt_firstFrame = 0, counter = 0,cnt_id = 0;
+	vector<pair<int, int>> chk_failure_track;
 
 	VideoCapture stream1(videoPath);
 	stream1.read(bw);
@@ -51,7 +52,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		//threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 27, -25);
+		adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 27, -25);
 		dilate(bw, bw, structuringElement7x7);
 		//dilate(bw, bw, structuringElement7x7);
 
@@ -139,6 +140,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack,cnt_firstFrame);
 		currentTrackStruture = trackingAPI.initalID(currentTrack, cnt_firstFrame);
 
+		chk_failure_track = trackingAPI.cnt_failure_tracking(currentTrack, newPointListToTrack, chk_failure_track);
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
 		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg);
