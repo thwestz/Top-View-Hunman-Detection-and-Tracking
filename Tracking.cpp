@@ -153,25 +153,27 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 				break;
 			}
 			//this part is bugging
-			/*if (i == vec_chk_track[i].first)
-			{
-				vec_chk_track[i].second += 1;
-				no_more_add = true;
-			}
-			else 
-			{
-				if (no_more_add == false)
+			for (int k = 0; k < vec_chk_track.size(); k++) {
+				if (i == vec_chk_track[k].first)
 				{
-					chk_failure_track = make_pair(i, 1);
-					vec_chk_track.push_back(chk_failure_track);
+					vec_chk_track[k].second += 1;
+					no_more_add = true;
 				}
-			}*/
+			}
+			if (no_more_add == false)
+			{
+				chk_failure_track = make_pair(i, 1);
+				vec_chk_track.push_back(chk_failure_track);
+			}
 
 		}
+		no_more_add = false;
+		flag = false;
 	}
 	for (int i = 0; i < vec_chk_track.size(); i++)
 	{
 		printf_s("track_id %d cnt %d round %d \n", vec_chk_track[i].first, vec_chk_track[i].second, i);
+		//waitKey(0);
 	}
 	return vec_chk_track;
 }
