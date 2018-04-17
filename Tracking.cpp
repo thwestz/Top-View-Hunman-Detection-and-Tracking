@@ -22,7 +22,6 @@ MultiTracker Tracking::adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTr
 				Rect2d totalSize = ROIs[i] | currentTrackers.getObjects()[j];
 				if (((overlap.area() * 100.00) / totalSize.area() > 5.00)) {
 					eraseTrackList.push_back(i);
-
 					break;
 				}
 
@@ -178,7 +177,7 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
 }
 
 
-void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg)
+void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track)
 {
 	/*vector<int> eraseTrack;
 	for (int i = 0; i < pathList.size(); i++) {
@@ -187,14 +186,34 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 		}
 
 	}*/
+	int cnt_frame;
+	if (chk_failure_track.size() == 0) {
+		for (int i = 0; i < currentTrackStruture.size(); i++) {
 
+			rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
+			putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+			imshow("Track", trackImg);
 
-	for (int i = 0; i < currentTrackStruture.size(); i++) {
-
-		rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
-		putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
-		imshow("Track", trackImg);
-
+		}
+	}
+	else 
+	{
+		for (int i = 0; i < currentTrackStruture.size(); i++) 
+		{
+			for (int j = 0; j < chk_failure_track.size(); j++) 
+			{
+				if (i == chk_failure_track[j].first)
+				{
+					cnt_frame = chk_failure_track[j].second;
+				}
+			}
+			if (cnt_frame < 50) 
+			{
+				rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
+				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+				imshow("Track", trackImg);
+			}
+		}
 	}
 
 }
@@ -246,4 +265,11 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 		//waitKey(0);
 	}
 	return vec_chk_track;
+}
+
+void Tracking::manageTrack(vector<pair<int, int>> chk_failure_track, vector<trackStructure> currentTrackStructure) 
+{
+	MultiTracker managedTracker;
+
+
 }
