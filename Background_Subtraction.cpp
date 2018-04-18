@@ -186,7 +186,7 @@ void BGSubtraction::BackgroundSubtraction(String videoPath, String svmPath)
 				pathList.push_back(reporter);
 			}
 		}
-		if (i == 50) {
+		if (i == 200) {
 			for (int i = 0; i < pathList.size(); i++) {
 				for (int j = 0; j < pathList[i].getPath().size(); j++) {
 					circle(path, pathList[i].getPath()[j], 3,Scalar(i * 10, 255, 0),-1);
