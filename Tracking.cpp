@@ -228,6 +228,16 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 		{
 			if ((currentTracker.getObjects()[i] & ROIs[j]).area() > 0)
 			{
+				if (vec_chk_track.size() > 0) 
+				{
+					for (int l = 0; l < vec_chk_track.size(); l++)
+					{
+						if (i == vec_chk_track[j].first)
+						{
+							vec_chk_track[l].second = 0;
+						}
+					}
+				}
 				flag = true;
 				break;
 			}

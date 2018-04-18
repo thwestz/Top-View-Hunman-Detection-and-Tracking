@@ -11,11 +11,6 @@ int main(int argc, char** argv)
 {
 	bool isTrain = false;
 
-<<<<<<< HEAD
-	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
-=======
->>>>>>> 1cc2df35be8cd739dc2064237a721b180382be6e
-
 	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
 
 	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/train/1.avi";
@@ -23,11 +18,9 @@ int main(int argc, char** argv)
 
 	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
 
-<<<<<<< HEAD
 	String videoPath = "E:/20180326/39.avi";
-=======
-	String videoPath = "D:/Senior_Project/39.avi";
->>>>>>> 1cc2df35be8cd739dc2064237a721b180382be6e
+
+	//String videoPath = "D:/Senior_Project/39.avi";
 
 	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
 	String svmPath = "D:/Senior_Project/head/04042018-1.xml";

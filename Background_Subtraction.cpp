@@ -10,10 +10,10 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	vector<trackStructure> trackManage;
 	Mat bg_im, bg_im_gray, image_gray, diff_im, bw, first_frame, pathImg;
 	Mat image, detectImg, toTrackimg, trackImg, originalImg, diff_new, bw_new, cleaned_im;
-	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7,7));
+	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
-	int cnt_firstFrame = 0, counter = 0,cnt_id = 0;
+	int cnt_firstFrame = 0, counter = 0, cnt_id = 0;
 	vector<pair<int, int>> chk_failure_track;
 
 	VideoCapture stream1(videoPath);
@@ -45,7 +45,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_3.jpg", bg_im);
 			pathImg = bg_im.clone();
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
-	
+
 		}
 
 		/// Pre-Image Processing///
@@ -75,7 +75,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			int cx = (sx + ex) / 2;
 			int cy = (sy + ey) / 2;
 
-			int tlx_o = 0,tly_o = 0,brx_o = 0,bry_o = 0;
+			int tlx_o = 0, tly_o = 0, brx_o = 0, bry_o = 0;
 
 			/// Controll Size of Region
 			if (areas[i] > 1000)
@@ -120,7 +120,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 						int bry = tly + (predicted[x].br().y - predicted[x].tl().y);
 
 						newPointList.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
-						newPointListToTrack.push_back(Rect2d(Point(tlx, tly ), Point(brx, bry)));
+						newPointListToTrack.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
 					}
 
 					for (int z = 0; z < newPointList.size(); z++) {
@@ -137,34 +137,16 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		//imshow("bw", bw);
 		imshow("HOG-SVM Detector", detectImg);
 		/// Tracking Algorithm
-		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack,cnt_firstFrame);
+		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack, cnt_firstFrame);
 		currentTrackStruture = trackingAPI.initalID(currentTrack, cnt_firstFrame);
 
-<<<<<<< HEAD
-			}
-			else {
-				reportTracking reporter;
-				
-				reporter.setID(currentTrackStruture[k].getTrackID());
-				reporter.addPath(currentTrackStruture[k].getCenterPoint());
-				pathList.push_back(reporter);
-			}
-		}
-		if (i == 200) {
-			for (int i = 0; i < pathList.size(); i++) {
-				for (int j = 0; j < pathList[i].getPath().size(); j++) {
-					circle(path, pathList[i].getPath()[j], 3,Scalar(i * 10, 255, 0),-1);
-					
-				}
-=======
 		chk_failure_track = trackingAPI.cnt_failure_tracking(currentTrack, newPointListToTrack, chk_failure_track);
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
 		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track);
-	  /* if (cnt_firstFrame == 40) {
-			trackingAPI.showPath(pathList, pathImg);
+		/* if (cnt_firstFrame == 40) {
+		trackingAPI.showPath(pathList, pathImg);
 		}*/
->>>>>>> 1cc2df35be8cd739dc2064237a721b180382be6e
 
 
 		cnt_firstFrame++;
