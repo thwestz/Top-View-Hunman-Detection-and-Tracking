@@ -21,3 +21,18 @@ void reportTracking::addPath(Point path)
 	pathList.push_back(path);
 }
 
+vector<Rect2d> reportTracking::getPathRect()
+{
+	return pathRect;
+}
+
+void reportTracking::addPathRect(Rect2d rect)
+{
+	pathRect.push_back(rect);
+}
+
+Rect2d reportTracking::getOnePath(int index)
+{
+	return pathRect[index];
+}
+

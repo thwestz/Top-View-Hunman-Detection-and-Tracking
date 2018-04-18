@@ -315,7 +315,7 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	double t = (double)getTickCount();
 
 
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.03);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.02);
 		for (size_t j = 0; j < detections.size(); j++)
 		{
 			if (foundWeights[j] < 1.0) {
