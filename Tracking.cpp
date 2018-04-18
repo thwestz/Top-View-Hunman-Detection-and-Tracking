@@ -226,13 +226,15 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 	{
 		for (int j = 0; j < ROIs.size(); j++) 
 		{
-			if ((currentTracker.getObjects()[i] & ROIs[j]).area() > 0)
+			Rect2d overlap = currentTracker.getObjects()[i] & ROIs[j];
+			Rect2d totalSize = currentTracker.getObjects()[i] | ROIs[j];
+			if (((overlap.area() * 100.00) / totalSize.area() > 45.00))
 			{
 				if (vec_chk_track.size() > 0) 
 				{
 					for (int l = 0; l < vec_chk_track.size(); l++)
 					{
-						if (i == vec_chk_track[j].first)
+						if (i == vec_chk_track[l].first)
 						{
 							vec_chk_track[l].second = 0;
 						}
