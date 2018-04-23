@@ -234,7 +234,7 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 				{
 					for (int l = 0; l < vec_chk_track.size(); l++)
 					{
-						if (i == vec_chk_track[l].first)
+						if (i == vec_chk_track[l].first && vec_chk_track[l].first < 50)
 						{
 							vec_chk_track[l].second = 0;
 						}
