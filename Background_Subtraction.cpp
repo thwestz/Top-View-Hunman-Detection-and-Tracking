@@ -13,10 +13,12 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 	Mat SE(5, 5, CV_8U, Scalar(1));
 	double th = 50;
-	int cnt_firstFrame = 0, counter = 0, cnt_id = 0;
+	int cnt_firstFrame = 0, counter = 0, cnt_id = 0, fps = 0;
 	vector<pair<int, int>> chk_failure_track;
 
 	VideoCapture stream1(videoPath);
+	fps = stream1.get(CV_CAP_PROP_FPS);
+	printf_s("FPS: %d \n", fps);
 	stream1.read(bw);
 	//stream1.set(CAP_PROP_POS_FRAMES, 60);
 	while (1)
