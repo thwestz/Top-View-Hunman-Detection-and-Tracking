@@ -165,7 +165,11 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
 
 	for (int i = 0; i < pairPath.size(); i++) {
 		Scalar color = Scalar(0,255,0);
-		if (pairPath[i].second > 10) {
+
+		printf_s("%s %d %s","ID : " ,pairPath[i].second, "\n");
+
+		printf_s("%d %d %d %s",pairPath[i].first.x, pairPath[i].first.y, pairPath[i].second,"\n");
+		if (pairPath[i].second > 5) {
 			circle(normalized, pairPath[i].first, 3, color, -1);
 		}
 		}
@@ -179,13 +183,6 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
 
 void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track)
 {
-	/*vector<int> eraseTrack;
-	for (int i = 0; i < pathList.size(); i++) {
-		if (pathList[i].getPathRect().size() <= 10) {
-			continue;
-		}
-
-	}*/
 	int cnt_frame;
 	if (chk_failure_track.size() == 0) {
 		for (int i = 0; i < currentTrackStruture.size(); i++) {
@@ -213,6 +210,7 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
 				imshow("Track", trackImg);
 			}
+
 		}
 	}
 
@@ -228,13 +226,15 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 		{
 			Rect2d overlap = currentTracker.getObjects()[i] & ROIs[j];
 			Rect2d totalSize = currentTracker.getObjects()[i] | ROIs[j];
+
+
 			if (((overlap.area() * 100.00) / totalSize.area() > 45.00))
 			{
 				if (vec_chk_track.size() > 0) 
 				{
 					for (int l = 0; l < vec_chk_track.size(); l++)
 					{
-						if (i == vec_chk_track[l].first && vec_chk_track[l].first < 50)
+						if (i == vec_chk_track[l].first/* && vec_chk_track[l].second < 50*/)
 						{
 							vec_chk_track[l].second = 0;
 						}
@@ -282,6 +282,4 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 void Tracking::manageTrack(vector<pair<int, int>> chk_failure_track, vector<trackStructure> currentTrackStructure) 
 {
 	MultiTracker managedTracker;
-
-
 }

@@ -272,6 +272,7 @@ void HOG_SVM::computeHOGs(const Size wsize, const vector< Mat > & img_lst, vecto
 {
 	//HOGDescriptor hog;
 	//hog.winSize = wsize;
+
 	HOGDescriptor hog(Size(36, 36), Size(8, 8), Size(4, 4), Size(4, 4), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, false, HOGDescriptor::DEFAULT_NLEVELS, false);
 
 	Rect r = Rect(0, 0, wsize.width, wsize.height);
@@ -314,11 +315,13 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	Mat cleanImg = img.clone();
 	double t = (double)getTickCount();
 
-
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.01);
+	///Oriental Video
+	//hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.01);
+	///Floor 18
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(8, 8), Size(0, 0), 1.01);
 		for (size_t j = 0; j < detections.size(); j++)
 		{
-			if (foundWeights[j] < 1.0) {
+			if (foundWeights[j] < 1.2) {
 				continue;
 			}
 			Rect point(detections[j].tl(), detections[j].br());
