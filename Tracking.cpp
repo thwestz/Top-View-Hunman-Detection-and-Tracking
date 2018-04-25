@@ -181,7 +181,7 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
 }
 
 
-void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track)
+void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track,int fps)
 {
 	int cnt_frame;
 	if (chk_failure_track.size() == 0) {
@@ -204,7 +204,7 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 					cnt_frame = chk_failure_track[j].second;
 				}
 			}
-			if (cnt_frame < 50) 
+			if (cnt_frame < fps * 30) 
 			{
 				rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
 				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
@@ -253,7 +253,6 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 				printf_s("frame_0 %d cnt %d ", vec_chk_track[i].first, vec_chk_track[i].second);
 				break;
 			}
-			//this part is bugging
 			for (int k = 0; k < vec_chk_track.size(); k++) {
 				if (i == vec_chk_track[k].first)
 				{

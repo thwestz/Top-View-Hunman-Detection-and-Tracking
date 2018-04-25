@@ -145,7 +145,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		chk_failure_track = trackingAPI.cnt_failure_tracking(currentTrack, newPointListToTrack, chk_failure_track);
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
-		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track);
+		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track, fps);
 		/* if (cnt_firstFrame == 40) {
 		trackingAPI.showPath(pathList, pathImg);
 		}*/
