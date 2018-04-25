@@ -113,20 +113,29 @@ vector<reportTracking> Tracking::manageReport(vector<trackStructure> currentTrac
 	return pathList;
 }
 
-void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
+void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg,int fps)
 {
 	RNG rng(12345);
 	Mat normalized = pathImg.clone();
 	vector<Point> pointList;
 	vector<Point> pointListTemp;
+	string filePath;
+	ofstream outputfile;
+	outputfile.open("D:/Senior_Project/result.txt", std::ios_base::app);
+	if (!outputfile.is_open()) {
+
+		std::ofstream newFile("D:/Senior_Project/result.txt");
+		newFile.close();
+		outputfile.open("D:/Senior_Project/result.txt", std::ios_base::app);
+	}
 	for (int i = 0; i < pathList.size(); i++) {
 		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 		for (int j = 0; j < pathList[i].getPath().size(); j++) {
 			pointList.push_back(pathList[i].getPath()[j]);
 			pointListTemp.push_back(pathList[i].getPath()[j]);
 			circle(pathImg, pathList[i].getPath()[j], 3, color, -1);
-
 		}
+	outputfile << "Point : " << pathList[i].getPath() << " ID : " << pathList[i].getID() << " Color : " << color.val[0] << "," << color.val[1] << "," << color.val[2] << "\n";
 	}
 	vector<pair<Point, int>> pairPath;
 	Point temp;
@@ -169,12 +178,12 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg)
 		printf_s("%s %d %s","ID : " ,pairPath[i].second, "\n");
 
 		printf_s("%d %d %d %s",pairPath[i].first.x, pairPath[i].first.y, pairPath[i].second,"\n");
-		if (pairPath[i].second > 5) {
+		if (pairPath[i].second  > 5) {
 			circle(normalized, pairPath[i].first, 3, color, -1);
 		}
 		}
 	
-
+	outputfile.close();
 	imshow("Path", pathImg);
 	imshow("Normalized Path", normalized);
 	waitKey(0);

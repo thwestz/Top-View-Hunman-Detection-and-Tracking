@@ -157,6 +157,6 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		if (waitKey(20) >= 0)
 			break;
 	}
-	trackingAPI.showPath(pathList, pathImg);
+	trackingAPI.showPath(pathList, pathImg, fps);
 	destroyAllWindows();
 }
