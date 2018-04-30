@@ -318,10 +318,10 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	///Oriental Video
 	//hog.detectMultiScale(img, detections, foundWeights, 0, Size(4, 4), Size(8, 8), 1.01);
 	///Floor 18
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(8, 8), Size(0, 0), 1.01);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(0,0), Size(8, 8), 1.04);
 		for (size_t j = 0; j < detections.size(); j++)
 		{
-			if (foundWeights[j] < 1.2) {
+			if (foundWeights[j] < 1.5) {
 				continue;
 			}
 			Rect point(detections[j].tl(), detections[j].br());

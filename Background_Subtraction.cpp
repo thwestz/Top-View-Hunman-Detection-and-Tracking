@@ -15,7 +15,6 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	double th = 50;
 	int cnt_firstFrame = 0, counter = 0, cnt_id = 0, fps = 0;
 	vector<pair<int, int>> chk_failure_track;
-
 	VideoCapture stream1(videoPath);
 	fps = stream1.get(CV_CAP_PROP_FPS);
 	printf_s("FPS: %d \n", fps);
@@ -35,7 +34,6 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		detectImg = image.clone();
 		trackImg = image.clone();
 		originalImg = image.clone();
-
 		resize(detectImg, toTrackimg, Size(detectImg.cols, detectImg.rows));
 
 		if (cnt_firstFrame == 0)
@@ -83,10 +81,10 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			if (areas[i] > 1000)
 			{
 
-				tlx_o = bb.tl().x - 20;
-				tly_o = bb.tl().y - 20;
-				brx_o = bb.br().x + 20;
-				bry_o = bb.br().y + 20;
+				tlx_o = bb.tl().x - 10;
+				tly_o = bb.tl().y - 10;
+				brx_o = bb.br().x + 10;
+				bry_o = bb.br().y + 10;
 				rectangle(image, bb, Scalar(0, 255, 0), 2);
 				if (tlx_o <= 0) {
 					tlx_o = 0;
@@ -113,6 +111,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 				if (predicted.size() <= 0) {
 					continue;
 				}
+
 				else {
 					for (int x = 0; x < predicted.size(); x++) {
 						int tlx = pointCrop.tl().x + predicted[x].tl().x;
@@ -125,6 +124,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 						newPointListToTrack.push_back(Rect2d(Point(tlx, tly), Point(brx, bry)));
 					}
 
+
 					for (int z = 0; z < newPointList.size(); z++) {
 						rectangle(detectImg, newPointList[z], Scalar(255, 0, 0), 2);
 					}
@@ -134,7 +134,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			}
 
 		}
-		//imshow("Image", image);
+		imshow("Image", image);
 		//imshow("Diff", diff_im);
 		//imshow("bw", bw);
 		imshow("HOG-SVM Detector", detectImg);
@@ -152,6 +152,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 
 
 		cnt_firstFrame++;
+		imwrite("D:/Senior_Project/Data/images" + to_string(cnt_firstFrame) + ".jpg", originalImg);
 		newPointList.clear();
 		reversePoint.clear();
 		if (waitKey(20) >= 0)

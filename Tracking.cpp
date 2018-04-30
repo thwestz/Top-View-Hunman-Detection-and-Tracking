@@ -29,7 +29,8 @@ MultiTracker Tracking::adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTr
 		}
 	}
 
-	for (int z = 1; z < ROIs.size(); z++) {
+
+	for ( int z = 0; z < ROIs.size(); z++) {
 		bool flag = false;
 		for (int x = 0; x < eraseTrackList.size(); x++) {
 
@@ -194,19 +195,19 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 {
 	int cnt_frame;
 	if (chk_failure_track.size() == 0) {
-		for (int i = 0; i < currentTrackStruture.size(); i++) {
+		for (int i = 1; i < currentTrackStruture.size(); i++) {
 
 			rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
-			putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+			putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID() - 1), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
 			imshow("Track", trackImg);
 
 		}
 	}
 	else 
 	{
-		for (int i = 0; i < currentTrackStruture.size(); i++) 
+		for (int i = 1; i < currentTrackStruture.size(); i++) 
 		{
-			for (int j = 0; j < chk_failure_track.size(); j++) 
+			for (int j = 1; j < chk_failure_track.size(); j++) 
 			{
 				if (i == chk_failure_track[j].first)
 				{
@@ -216,7 +217,7 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 			if (cnt_frame < fps * 30) 
 			{
 				rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
-				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID() - 1), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
 				imshow("Track", trackImg);
 			}
 
