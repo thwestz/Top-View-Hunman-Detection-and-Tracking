@@ -62,7 +62,7 @@ vector<trackStructure> Tracking::initalID(MultiTracker currentTrackers, int curr
 	for (int i = 0; i < currentTrackers.getObjects().size(); i++) {
 		Point center_of_rect = (currentTrackers.getObjects()[i].br() + currentTrackers.getObjects()[i].tl())*0.5;
 		trackStructure newTrack;
-		newTrack.setTrackID(i + 1);
+		newTrack.setTrackID(i+1);
 		newTrack.setROI(currentTrackers.getObjects()[i]);
 		newTrack.setStatus(1);
 		newTrack.setFirstFrame(currentFrame);
@@ -135,8 +135,7 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg, int fps)
 			pointListTemp.push_back(pathList[i].getPath()[j]);
 			circle(pathImg, pathList[i].getPath()[j], 3, color, -1);
 		}
-			outputfile <<"Point : " << pathList[i].getPath() << "\n" << " ID : " << pathList[i].getID() << " Color : " << color.val[0] << "," << color.val[1] << "," << color.val[2] << "\n";
-
+			outputfile << "Point : " << pathList[i].getPath() << "\n" << " ID : " << pathList[i].getID() << " Color : " << color.val[0] << "," << color.val[1] << "," << color.val[2] << "\n";
 	}
 	vector<pair<Point, int>> pairPath;
 	Point temp;
@@ -199,7 +198,7 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 
 			rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
 			putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
-			recorder.write(trackImg);
+			//recorder.write(trackImg);
 			imshow("Track", trackImg);
 
 		}
@@ -215,11 +214,11 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 					cnt_frame = chk_failure_track[j].second;
 				}
 			}
-			if (cnt_frame < fps * 10)
+			if (cnt_frame < fps * 5)
 			{
 				rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
 				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID() - 1), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
-				recorder.write(trackImg);
+				//recorder.write(trackImg);
 				imshow("Track", trackImg);
 
 			}
@@ -246,7 +245,11 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 				{
 					for (int l = 0; l < vec_chk_track.size(); l++)
 					{
-						if (i == vec_chk_track[l].first/* && vec_chk_track[l].second < 50*/)
+						if (i == vec_chk_track[l].first)
+						{
+							vec_chk_track[l].second = 0;
+						}
+						else if (i == vec_chk_track[l].first && ((overlap.area() * 100.00) / totalSize.area() > 85.00))
 						{
 							vec_chk_track[l].second = 0;
 						}

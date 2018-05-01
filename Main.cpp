@@ -18,7 +18,8 @@ int main(int argc, char** argv)
 
 	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
 
-	String videoPath = "E:/20180424/t1.avi";
+	String videoPath = "D:/Senior_Project/20180424/t3.avi";
+	//String videoPath = "D:/ProjectCCTV.avi";
 
 	//String videoPath = "D:/video selected/FE11.avi";
 

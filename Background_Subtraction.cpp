@@ -1,7 +1,7 @@
 #include "BGSubtraction.h"
 void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 {
-	VideoWriter recorder("D:/Senior_Project/Tracking.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10, Size(800, 600), true);
+	VideoWriter recorder("D:/Senior_Project/Tracking.avi", CV_FOURCC('X', 'V', 'I', 'D'), 10, Size(800, 600), true);
 	vector<Rect2d> testRect;
 	Tracking trackingAPI;
 	HOG_SVM HOG_SVMHeader;
@@ -42,9 +42,9 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		if (cnt_firstFrame == 0)
 		{
 			first_frame = image;
-			//bg_im = first_frame;
+			bg_im = first_frame;
 			pathImg = first_frame.clone();
-			bg_im = imread("D:/Senior_Project/head/bg.jpg");
+			//bg_im = imread("D:/Senior_Project/bg.jpg");
 			//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_3.jpg", bg_im);
 			pathImg = bg_im.clone();
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
