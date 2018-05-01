@@ -1,6 +1,7 @@
 #include "BGSubtraction.h"
 void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 {
+	VideoWriter recorder("D:/Senior_Project/Tracking.avi", CV_FOURCC('M', 'J', 'P', 'G'), 10, Size(800, 600), true);
 	vector<Rect2d> testRect;
 	Tracking trackingAPI;
 	HOG_SVM HOG_SVMHeader;
@@ -12,7 +13,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat image, detectImg, toTrackimg, trackImg, originalImg, diff_new, bw_new, cleaned_im;
 	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 	Mat SE(5, 5, CV_8U, Scalar(1));
-	double th = 50;
+	double th = 40;
 	int cnt_firstFrame = 0, counter = 0, cnt_id = 0, fps = 0;
 	vector<pair<int, int>> chk_failure_track;
 
@@ -41,9 +42,9 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		if (cnt_firstFrame == 0)
 		{
 			first_frame = image;
-			bg_im = first_frame;
+			//bg_im = first_frame;
 			pathImg = first_frame.clone();
-			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg.jpg");
+			bg_im = imread("D:/Senior_Project/head/bg.jpg");
 			//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_3.jpg", bg_im);
 			pathImg = bg_im.clone();
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
@@ -54,11 +55,11 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 27, -25);
+		//adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 27, -25);
 		dilate(bw, bw, structuringElement7x7);
 		//dilate(bw, bw, structuringElement7x7);
 
-		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
+		//morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
 
@@ -145,11 +146,12 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		chk_failure_track = trackingAPI.cnt_failure_tracking(currentTrack, newPointListToTrack, chk_failure_track);
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
-		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track, fps);
+		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track, fps,recorder);
 		/* if (cnt_firstFrame == 40) {
 		trackingAPI.showPath(pathList, pathImg);
 		}*/
 
+		//imwrite("D:/Senior_Project/head/bg.jpg",originalImg);
 
 		cnt_firstFrame++;
 		newPointList.clear();

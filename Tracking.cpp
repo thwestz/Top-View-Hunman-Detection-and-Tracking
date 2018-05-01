@@ -29,7 +29,7 @@ MultiTracker Tracking::adaptMultiTracker(Mat frame, vector<Rect2d> ROIs, MultiTr
 		}
 	}
 
-	for (int z = 1; z < ROIs.size(); z++) {
+	for (int z = 0; z < ROIs.size(); z++) {
 		bool flag = false;
 		for (int x = 0; x < eraseTrackList.size(); x++) {
 
@@ -113,7 +113,7 @@ vector<reportTracking> Tracking::manageReport(vector<trackStructure> currentTrac
 	return pathList;
 }
 
-void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg,int fps)
+void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg, int fps)
 {
 	RNG rng(12345);
 	Mat normalized = pathImg.clone();
@@ -135,7 +135,8 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg,int fps)
 			pointListTemp.push_back(pathList[i].getPath()[j]);
 			circle(pathImg, pathList[i].getPath()[j], 3, color, -1);
 		}
-	outputfile << "Point : " << pathList[i].getPath() << " ID : " << pathList[i].getID() << " Color : " << color.val[0] << "," << color.val[1] << "," << color.val[2] << "\n";
+			outputfile <<"Point : " << pathList[i].getPath() << "\n" << " ID : " << pathList[i].getID() << " Color : " << color.val[0] << "," << color.val[1] << "," << color.val[2] << "\n";
+
 	}
 	vector<pair<Point, int>> pairPath;
 	Point temp;
@@ -173,16 +174,16 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg,int fps)
 	}
 
 	for (int i = 0; i < pairPath.size(); i++) {
-		Scalar color = Scalar(0,255,0);
+		Scalar color = Scalar(0, 255, 0);
 
-		printf_s("%s %d %s","ID : " ,pairPath[i].second, "\n");
+		printf_s("%s %d %s", "ID : ", pairPath[i].second, "\n");
 
-		printf_s("%d %d %d %s",pairPath[i].first.x, pairPath[i].first.y, pairPath[i].second,"\n");
-		if (pairPath[i].second  > 5) {
+		printf_s("%d %d %d %s", pairPath[i].first.x, pairPath[i].first.y, pairPath[i].second, "\n");
+		if (pairPath[i].second > 5) {
 			circle(normalized, pairPath[i].first, 3, color, -1);
 		}
-		}
-	
+	}
+
 	outputfile.close();
 	imshow("Path", pathImg);
 	imshow("Normalized Path", normalized);
@@ -190,7 +191,7 @@ void Tracking::showPath(vector<reportTracking> pathList, Mat pathImg,int fps)
 }
 
 
-void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track,int fps)
+void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure> currentTrackStruture, Mat trackImg, vector<pair<int, int>>chk_failure_track, int fps, VideoWriter recorder)
 {
 	int cnt_frame;
 	if (chk_failure_track.size() == 0) {
@@ -198,40 +199,42 @@ void Tracking::showTrack(vector<reportTracking> pathList, vector<trackStructure>
 
 			rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
 			putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+			recorder.write(trackImg);
 			imshow("Track", trackImg);
 
 		}
 	}
-	else 
+	else
 	{
-		for (int i = 0; i < currentTrackStruture.size(); i++) 
+		for (int i = 1; i < currentTrackStruture.size(); i++)
 		{
-			for (int j = 0; j < chk_failure_track.size(); j++) 
+			for (int j = 0; j < chk_failure_track.size(); j++)
 			{
 				if (i == chk_failure_track[j].first)
 				{
 					cnt_frame = chk_failure_track[j].second;
 				}
 			}
-			if (cnt_frame < fps * 30) 
+			if (cnt_frame < fps * 10)
 			{
 				rectangle(trackImg, currentTrackStruture[i].getROI(), Scalar(255, 0, 0), 2, 1);
-				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID()), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+				putText(trackImg, "id:" + to_string(currentTrackStruture[i].getTrackID() - 1), currentTrackStruture[i].getROI().tl(), 1, 2, Scalar(255, 0, 255), 2);
+				recorder.write(trackImg);
 				imshow("Track", trackImg);
+
 			}
 
 		}
 	}
-
 }
 
 vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracker, vector<Rect2d> ROIs, vector<pair<int, int>> vec_chk_track) {
-	pair<int, int> chk_failure_track = make_pair(0,0);
+	pair<int, int> chk_failure_track = make_pair(0, 0);
 	bool flag = false;
 	bool no_more_add = false;
-	for (int i = 0; i < currentTracker.getObjects().size(); i++) 
+	for (int i = 0; i < currentTracker.getObjects().size(); i++)
 	{
-		for (int j = 0; j < ROIs.size(); j++) 
+		for (int j = 0; j < ROIs.size(); j++)
 		{
 			Rect2d overlap = currentTracker.getObjects()[i] & ROIs[j];
 			Rect2d totalSize = currentTracker.getObjects()[i] | ROIs[j];
@@ -239,7 +242,7 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 
 			if (((overlap.area() * 100.00) / totalSize.area() > 45.00))
 			{
-				if (vec_chk_track.size() > 0) 
+				if (vec_chk_track.size() > 0)
 				{
 					for (int l = 0; l < vec_chk_track.size(); l++)
 					{
@@ -287,7 +290,7 @@ vector<pair<int, int>> Tracking::cnt_failure_tracking(MultiTracker currentTracke
 	return vec_chk_track;
 }
 
-void Tracking::manageTrack(vector<pair<int, int>> chk_failure_track, vector<trackStructure> currentTrackStructure) 
+void Tracking::manageTrack(vector<pair<int, int>> chk_failure_track, vector<trackStructure> currentTrackStructure)
 {
 	MultiTracker managedTracker;
 }
