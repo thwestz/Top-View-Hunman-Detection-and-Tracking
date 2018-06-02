@@ -316,27 +316,22 @@ vector<Rect> HOG_SVM::test_trained_detector(String obj_det_filename, Mat ROI, bo
 	double t = (double)getTickCount();
 
 	///Oriental Video
-	hog.detectMultiScale(img, detections, foundWeights, 0, Size(0, 0), Size(8,8), 1.01);
+	//hog.detectMultiScale(img, detections, foundWeights, 0, Size(0, 0), Size(8,8), 1.01);
 	///Floor 18
-	//hog.detectMultiScale(img, detections, foundWeights, 0, Size(0,0), Size(8, 8), 1.04);
+	hog.detectMultiScale(img, detections, foundWeights, 0, Size(8,8), Size(0, 0), 1.03);
+
+
 		for (size_t j = 0; j < detections.size(); j++)
 		{
-			if (foundWeights[j] < 1.2) {
+			if (foundWeights[j] < 1.5) {
 				continue;
 			}
 			Rect point(detections[j].tl(), detections[j].br());
 			Scalar color = Scalar(0, foundWeights[j] * foundWeights[j] * 200, 0);
 			predicted.push_back(point);
-			//rectangle(img, detections[j], color, img.cols / 400 + 1);
-			/*if (doHardNegative) {
-				Mat crop = cleanImg(point);
-				resize(crop, crop, Size(36, 36));
-				imwrite("D:/hard_negative/image__" + to_string(counter) + ".jpg", crop);
-				counter++;
-			}*/
+
 		}
 
-		//imshow(obj_det_filename, img);
 		return predicted;
 }
 
@@ -421,8 +416,6 @@ int HOG_SVM::train_detector(String pos_dir, String neg_dir, String test_dir, Str
 	if (train_twice)
 	{
 		printf_s("%s $s", "Testing trained detector on negative images. This may take a few minutes...", "\n");
-		//HOGDescriptor my_hog;
-		//my_hog.winSize = pos_image_size;
 		HOGDescriptor my_hog(Size(36, 36), Size(8, 8), Size(4, 4), Size(4, 4), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, false, HOGDescriptor::DEFAULT_NLEVELS, false);
 
 

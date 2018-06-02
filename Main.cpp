@@ -11,21 +11,14 @@ int main(int argc, char** argv)
 {
 	bool isTrain = false;
 
-	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/test/FE99.avi";
 
-	//String videoPath = "D:/Senior_Project/Train HOG -2/Video/train/1.avi";
+	String videoPath = "D:/Senior_Project/Data/t1.avi";
 
-
-	//String videoPath = "D:/20180322/DCS-6010L_20180322141656.avi";
-
-	String videoPath = "D:/Senior_Project/Data/FE12.avi";
-
-	//String videoPath = "D:/video selected/FE11.avi";
 
 	//String videoPath = "http://admin:kongkong@10.1.134.159/video1.mjpg";
-	String svmPath = "D:/Senior_Project/Data/3042018-1C100.xml";
 
-	//String svmPath = "D:/my_detector_hn_4.yml";
+	String svmPath = "D:/Senior_Project/Model/18042018-1C001.xml";
+
 
 
 
