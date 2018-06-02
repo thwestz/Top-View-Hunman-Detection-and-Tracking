@@ -1,6 +1,20 @@
 #include "BGSubtraction.h"
+#include <algorithm>
+typedef struct {
+	int ID;
+	Ptr<Tracker> tracker;
+	int status;
+	bool Failed;
+	int FailFrameCnt;
+	Rect2d currROI;
+	vector<Point2d> path;
+	// Other status
+} sTracker;
+
 void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 {
+
+	vector<sTracker> singleTrackerList;
 	vector<Rect2d> testRect;
 	Tracking trackingAPI;
 	HOG_SVM HOG_SVMHeader;
@@ -12,14 +26,17 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 	Mat image, detectImg, toTrackimg, trackImg, originalImg, diff_new, bw_new, cleaned_im;
 	Mat structuringElement7x7 = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(7, 7));
 	Mat SE(5, 5, CV_8U, Scalar(1));
-	double th = 50;
-	int cnt_firstFrame = 0, counter = 0, cnt_id = 0, fps = 0;
+	double th = 40;
+	int cnt_firstFrame = 0, counter = 0, cnt_id = 0, fps = 0, initId = 0;
 	vector<pair<int, int>> chk_failure_track;
 	VideoCapture stream1(videoPath);
 	fps = stream1.get(CV_CAP_PROP_FPS);
 	printf_s("FPS: %d \n", fps);
 	stream1.read(bw);
-	//stream1.set(CAP_PROP_POS_FRAMES, 60);
+
+
+
+	stream1.set(CAP_PROP_POS_FRAMES, 600);
 	while (1)
 	{
 		vector<Rect2d> reversePoint, newPointList, newPointListToTrack;
@@ -30,7 +47,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		}
 
 		stream1 >> image;
-
+		//resize(image,image,Size(800 , 600));
 		detectImg = image.clone();
 		trackImg = image.clone();
 		originalImg = image.clone();
@@ -41,7 +58,7 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			first_frame = image;
 			bg_im = first_frame;
 			pathImg = first_frame.clone();
-			//bg_im = imread("D:/Senior_Project/Train HOG -2/Video/train/bg.jpg");
+			//bg_im = imread("D:/Senior_Project/bg.jpg");
 			//imwrite("D:/Senior_Project/Train HOG -2/Video/train/bg_3.jpg", bg_im);
 			pathImg = bg_im.clone();
 			cvtColor(bg_im, bg_im_gray, COLOR_BGR2GRAY);
@@ -52,11 +69,12 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		cvtColor(image, image_gray, COLOR_BGR2GRAY);
 		absdiff(bg_im_gray, image_gray, diff_im);
 		threshold(diff_im, bw, th, 255, THRESH_BINARY);
-		adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 27, -25);
+		//adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 7, -20);
+		//adaptiveThreshold(diff_im, bw, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 37, -35);
 		dilate(bw, bw, structuringElement7x7);
 		//dilate(bw, bw, structuringElement7x7);
 
-		morphologyEx(bw, cleaned_im, MORPH_OPEN, SE);
+		//morphologyEx(bw, bw, MORPH_CLOSE, SE);
 		cvtColor(diff_im, diff_new, COLOR_GRAY2BGR);
 		cvtColor(bw, bw_new, COLOR_GRAY2BGR);
 
@@ -134,11 +152,72 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 			}
 
 		}
-		imshow("Image", image);
+		//imshow("Image", image);
 		//imshow("Diff", diff_im);
 		//imshow("bw", bw);
 		imshow("HOG-SVM Detector", detectImg);
 		/// Tracking Algorithm
+
+	/*	for (int i = 0; i < newPointListToTrack.size(); i++) {
+
+			bool Flag1_chk = true;
+			if (newPointListToTrack.size() > 0) {
+				for (int j = 0; j < singleTrackerList.size(); j++) {
+					Rect2d overlap = newPointListToTrack[i] & singleTrackerList[j].currROI;
+					Rect2d totalSize = newPointListToTrack[i] | singleTrackerList[j].currROI;
+				
+					if ((( overlap.area() / totalSize.area()) * 100 > 10.00)) {
+						Flag1_chk = false;
+					}
+				}
+			}
+			bool Flag2_chk = true;
+			if (newPointListToTrack.size() > 0) {
+				vector<sTracker> temp = singleTrackerList;
+				for (int j = 0; j < singleTrackerList.size(); j++) {
+					for (int k = 0; k < temp.size(); k++) {
+						if (j = k) {
+							continue;
+						}
+
+						Rect2d overlap = singleTrackerList[j].currROI & temp[k].currROI;
+						Rect2d totalSize = singleTrackerList[j].currROI | temp[k].currROI;
+						if (((overlap.area() / totalSize.area()) * 100 > 5.00)) {
+							singleTrackerList[j].currROI = totalSize;
+							//singleTrackerList.erase(singleTrackerList.begin() + k);
+						}
+					}
+				}
+			}
+			if (Flag1_chk && Flag2_chk) {
+				sTracker obj;
+				obj.ID = initId;
+				initId++;
+
+				Ptr<Tracker> tracker = TrackerMIL::create();
+				tracker->init(toTrackimg, newPointListToTrack[i]);
+
+				obj.tracker = tracker;
+				obj.status = true;
+				obj.Failed = false;
+				obj.FailFrameCnt = 0;
+				obj.currROI = newPointListToTrack[i];
+
+				singleTrackerList.push_back(obj);
+			}
+
+		}
+
+		
+		for (int i = 0; i < singleTrackerList.size(); i++) {
+			singleTrackerList[i].tracker->update(toTrackimg, singleTrackerList[i].currROI);
+
+			rectangle(toTrackimg, singleTrackerList[i].currROI, Scalar(255, 0, 0), 2, 1);
+		}
+		imshow("tracker", toTrackimg);
+
+		*/
+
 		currentTrack = trackingAPI.adaptMultiTracker(toTrackimg, newPointListToTrack, currentTrack, cnt_firstFrame);
 		currentTrackStruture = trackingAPI.initalID(currentTrack, cnt_firstFrame);
 
@@ -146,13 +225,9 @@ void BGSubtraction::detectAndTrack(String videoPath, String svmPath)
 		/// Manage Report
 		pathList = trackingAPI.manageReport(currentTrackStruture, pathList);
 		trackingAPI.showTrack(pathList, currentTrackStruture, trackImg, chk_failure_track, fps);
-		/* if (cnt_firstFrame == 40) {
-		trackingAPI.showPath(pathList, pathImg);
-		}*/
-
+	
 
 		cnt_firstFrame++;
-		imwrite("D:/Senior_Project/Data/images" + to_string(cnt_firstFrame) + ".jpg", originalImg);
 		newPointList.clear();
 		reversePoint.clear();
 		if (waitKey(20) >= 0)
